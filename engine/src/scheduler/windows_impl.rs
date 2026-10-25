@@ -28,7 +28,7 @@ use windows::Win32::System::TaskScheduler::{
     TASK_LOGON_PASSWORD, TASK_LOGON_S4U, TASK_LOGON_SERVICE_ACCOUNT, TASK_LOGON_TYPE,
 };
 
-use crate::error::{translate_hresult, Result, BackupError};
+use crate::error::{translate_hresult, BackupError, Result};
 use crate::model::LogonType;
 use crate::scheduler::{parent_folder, TaskAuthInfo, TaskHandle, TaskSchedulerApi};
 
@@ -80,9 +80,16 @@ impl WindowsScheduler {
                     translate_hresult("CoCreateInstance(TaskScheduler)", e.code().0 as u32)
                 })?;
             service
-                .Connect(&VARIANT::default(), &VARIANT::default(), &VARIANT::default(), &VARIANT::default())
+                .Connect(
+                    &VARIANT::default(),
+                    &VARIANT::default(),
+                    &VARIANT::default(),
+                    &VARIANT::default(),
+                )
                 .map_err(|e| translate_hresult("ITaskService::Connect", e.code().0 as u32))?;
-            Ok(WindowsScheduler { service: Some(service) })
+            Ok(WindowsScheduler {
+                service: Some(service),
+            })
         }
     }
 
@@ -108,13 +115,13 @@ impl WindowsScheduler {
             let tasks = folder
                 .GetTasks(0)
                 .map_err(|e| translate_hresult(&format!("GetTasks({path})"), e.code().0 as u32))?;
-            let count = tasks
-                .Count()
-                .map_err(|e| translate_hresult("IRegisteredTaskCollection::Count", e.code().0 as u32))?;
+            let count = tasks.Count().map_err(|e| {
+                translate_hresult("IRegisteredTaskCollection::Count", e.code().0 as u32)
+            })?;
             for i in 1..=count {
-                let item = tasks
-                    .get_Item(&VARIANT::from(i))
-                    .map_err(|e| translate_hresult("IRegisteredTaskCollection::Item", e.code().0 as u32))?;
+                let item = tasks.get_Item(&VARIANT::from(i)).map_err(|e| {
+                    translate_hresult("IRegisteredTaskCollection::Item", e.code().0 as u32)
+                })?;
                 let name = item
                     .Path()
                     .map_err(|e| translate_hresult("IRegisteredTask::Path", e.code().0 as u32))?;
@@ -123,16 +130,16 @@ impl WindowsScheduler {
                 });
             }
             if recursive {
-                let subfolders = folder
-                    .GetFolders(0)
-                    .map_err(|e| translate_hresult(&format!("GetFolders({path})"), e.code().0 as u32))?;
-                let fcount = subfolders
-                    .Count()
-                    .map_err(|e| translate_hresult("ITaskFolderCollection::Count", e.code().0 as u32))?;
+                let subfolders = folder.GetFolders(0).map_err(|e| {
+                    translate_hresult(&format!("GetFolders({path})"), e.code().0 as u32)
+                })?;
+                let fcount = subfolders.Count().map_err(|e| {
+                    translate_hresult("ITaskFolderCollection::Count", e.code().0 as u32)
+                })?;
                 for i in 1..=fcount {
-                    let sub = subfolders
-                        .get_Item(&VARIANT::from(i))
-                        .map_err(|e| translate_hresult("ITaskFolderCollection::Item", e.code().0 as u32))?;
+                    let sub = subfolders.get_Item(&VARIANT::from(i)).map_err(|e| {
+                        translate_hresult("ITaskFolderCollection::Item", e.code().0 as u32)
+                    })?;
                     let sub_path = sub
                         .Path()
                         .map_err(|e| translate_hresult("ITaskFolder::Path", e.code().0 as u32))?
@@ -286,7 +293,9 @@ impl TaskSchedulerApi for WindowsScheduler {
                     to_win_logon(logon_type),
                     &VARIANT::default(),
                 )
-                .map_err(|e| translate_hresult(&format!("RegisterTask({path})"), e.code().0 as u32))?;
+                .map_err(|e| {
+                    translate_hresult(&format!("RegisterTask({path})"), e.code().0 as u32)
+                })?;
             Ok(())
         }
     }
@@ -309,8 +318,12 @@ pub fn is_elevated() -> bool {
 
     unsafe {
         let mut token = HANDLE::default();
-        if OpenProcessToken(GetCurrentProcess(), TOKEN_ACCESS_MASK(TOKEN_QUERY.0), &mut token)
-            .is_err()
+        if OpenProcessToken(
+            GetCurrentProcess(),
+            TOKEN_ACCESS_MASK(TOKEN_QUERY.0),
+            &mut token,
+        )
+        .is_err()
         {
             return false;
         }

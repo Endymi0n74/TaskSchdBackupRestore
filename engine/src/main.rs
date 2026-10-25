@@ -5,9 +5,11 @@ use std::io::IsTerminal;
 use clap::Parser;
 
 use taskschdbackuprestore::answers::{parse_user_map, AnswerFile};
-use taskschdbackuprestore::error::{Result, BackupError};
+use taskschdbackuprestore::error::{BackupError, Result};
 use taskschdbackuprestore::export::{export, is_microsoft_task, PatternFilter};
-use taskschdbackuprestore::import::{build_plan, execute_plan_with_undo, load_and_verify, ImportOptions};
+use taskschdbackuprestore::import::{
+    build_plan, execute_plan_with_undo, load_and_verify, ImportOptions,
+};
 use taskschdbackuprestore::model::ExecutionReport;
 use taskschdbackuprestore::password::{load_password_file, PasswordResolver};
 use taskschdbackuprestore::scheduler::TaskSchedulerApi;
@@ -24,22 +26,39 @@ fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>> {
 #[cfg(not(windows))]
 fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>> {
     Err(BackupError::PlatformUnsupported(
-        "l'acces au Task Scheduler Windows necessite d'executer TaskSchdBackupRestore sur Windows".to_string(),
+        "l'acces au Task Scheduler Windows necessite d'executer TaskSchdBackupRestore sur Windows"
+            .to_string(),
     ))
 }
 
 fn print_report(report: &ExecutionReport, dry_run: bool) {
     let verb = if dry_run { "seraient" } else { "ont ete" };
     println!();
-    println!("=== Rapport d'import{} ===", if dry_run { " (dry-run)" } else { "" });
+    println!(
+        "=== Rapport d'import{} ===",
+        if dry_run { " (dry-run)" } else { "" }
+    );
     if !report.created.is_empty() {
-        println!("Crees ({}) : {} {}", report.created.len(), report.created.join(", "), verb);
+        println!(
+            "Crees ({}) : {} {}",
+            report.created.len(),
+            report.created.join(", "),
+            verb
+        );
     }
     if !report.updated.is_empty() {
-        println!("Mis a jour ({}) : {}", report.updated.len(), report.updated.join(", "));
+        println!(
+            "Mis a jour ({}) : {}",
+            report.updated.len(),
+            report.updated.join(", ")
+        );
     }
     if !report.skipped.is_empty() {
-        println!("Ignores ({}) : {}", report.skipped.len(), report.skipped.join(", "));
+        println!(
+            "Ignores ({}) : {}",
+            report.skipped.len(),
+            report.skipped.join(", ")
+        );
     }
     if !report.blocked.is_empty() {
         println!("Bloques ({}) :", report.blocked.len());
@@ -53,7 +72,11 @@ fn print_report(report: &ExecutionReport, dry_run: bool) {
             println!("  - {path}: {reason}");
         }
     }
-    if let Some(dossier) = report.backed_up.first().and_then(|f| std::path::Path::new(f).parent()) {
+    if let Some(dossier) = report
+        .backed_up
+        .first()
+        .and_then(|f| std::path::Path::new(f).parent())
+    {
         println!(
             "Sauvegardes ({}) : {} (dossier reimportable : TaskSchdBackupRestore import {})",
             report.backed_up.len(),
@@ -87,7 +110,10 @@ fn run() -> Result<i32> {
         taskschdbackuprestore::local_host_name()
     ));
     match cli.command {
-        Command::List { recursive, hide_microsoft } => {
+        Command::List {
+            recursive,
+            hide_microsoft,
+        } => {
             let scheduler = make_scheduler()?;
             let tasks = scheduler.list_tasks(recursive)?;
             let mut shown = 0usize;
@@ -100,7 +126,10 @@ fn run() -> Result<i32> {
             }
             if hide_microsoft {
                 let hidden = tasks.len() - shown;
-                println!("{} tache(s) affichee(s) ({} Microsoft masquee(s)).", shown, hidden);
+                println!(
+                    "{} tache(s) affichee(s) ({} Microsoft masquee(s)).",
+                    shown, hidden
+                );
             } else {
                 println!("{} tache(s).", tasks.len());
             }
@@ -122,7 +151,13 @@ fn run() -> Result<i32> {
             }
             let filter = PatternFilter::new(include, exclude);
             taskschdbackuprestore::log::info(format!("Export vers {}", dir.display()));
-            let summary = export(scheduler.as_ref(), &dir, true, &filter, &taskschdbackuprestore::local_host_name())?;
+            let summary = export(
+                scheduler.as_ref(),
+                &dir,
+                true,
+                &filter,
+                &taskschdbackuprestore::local_host_name(),
+            )?;
             println!(
                 "{} tache(s) exportee(s) vers {}",
                 summary.exported.len(),
@@ -224,8 +259,10 @@ fn run() -> Result<i32> {
 
             // Ecrasements reversibles : copie du XML actuel avant ecriture.
             // Le dossier d'annulation est lui-meme une archive reimportable.
-            let undo = (!dry_run).then(|| undo_dir.unwrap_or_else(taskschdbackuprestore::import::default_undo_dir));
-            let report = execute_plan_with_undo(scheduler.as_ref(), &plan, dry_run, undo.as_deref())?;
+            let undo = (!dry_run)
+                .then(|| undo_dir.unwrap_or_else(taskschdbackuprestore::import::default_undo_dir));
+            let report =
+                execute_plan_with_undo(scheduler.as_ref(), &plan, dry_run, undo.as_deref())?;
             print_report(&report, dry_run);
             taskschdbackuprestore::log::info(format!(
                 "Import{} : {} creee(s), {} mise(s) a jour, {} ignoree(s), {} bloquee(s), {} echec(s)",

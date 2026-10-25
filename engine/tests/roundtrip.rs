@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 
-use tempfile::tempdir;
 use taskschdbackuprestore::answers::AnswerFile;
 use taskschdbackuprestore::export::{export, PatternFilter};
 use taskschdbackuprestore::import::{build_plan, execute_plan, load_and_verify, ImportOptions};
@@ -13,6 +12,7 @@ use taskschdbackuprestore::password::PasswordResolver;
 use taskschdbackuprestore::scheduler::mock::{MockScheduler, MockTask};
 use taskschdbackuprestore::scheduler::TaskSchedulerApi;
 use taskschdbackuprestore::wizard::NullInteractor;
+use tempfile::tempdir;
 
 fn source_scheduler() -> MockScheduler {
     MockScheduler::new(true)
@@ -44,7 +44,8 @@ fn full_export_then_import_roundtrip_no_xml_error() {
     export(&source, dir.path(), true, &filter, "SOURCE-PC").unwrap();
 
     // Verifie l'integrite de l'archive independamment (equivalent de `TaskSchdBackupRestore validate`).
-    let (manifest, xmls) = load_and_verify(dir.path()).expect("l'archive exportee doit etre valide");
+    let (manifest, xmls) =
+        load_and_verify(dir.path()).expect("l'archive exportee doit etre valide");
     assert_eq!(manifest.tasks.len(), 2);
 
     let target = MockScheduler::new(true);
@@ -58,7 +59,15 @@ fn full_export_then_import_roundtrip_no_xml_error() {
         answers: None,
         target_folder: None,
     };
-    let plan = build_plan(&target, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+    let plan = build_plan(
+        &target,
+        &manifest,
+        &xmls,
+        &options,
+        &resolver,
+        &NullInteractor,
+    )
+    .unwrap();
     assert!(plan.iter().all(|p| p.action == ImportAction::Create));
 
     let report = execute_plan(&target, &plan, false).unwrap();
@@ -92,10 +101,22 @@ fn dry_run_on_full_roundtrip_never_writes() {
         answers: None,
         target_folder: None,
     };
-    let plan = build_plan(&target, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+    let plan = build_plan(
+        &target,
+        &manifest,
+        &xmls,
+        &options,
+        &resolver,
+        &NullInteractor,
+    )
+    .unwrap();
     let report = execute_plan(&target, &plan, true).unwrap();
     assert_eq!(report.created.len(), 2);
-    assert_eq!(target.registration_count(), 0, "le dry-run ne doit rien ecrire");
+    assert_eq!(
+        target.registration_count(),
+        0,
+        "le dry-run ne doit rien ecrire"
+    );
 }
 
 #[test]
@@ -125,7 +146,15 @@ fn answer_file_drives_fully_non_interactive_import() {
         answers: Some(&answers),
         target_folder: None,
     };
-    let plan = build_plan(&target, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+    let plan = build_plan(
+        &target,
+        &manifest,
+        &xmls,
+        &options,
+        &resolver,
+        &NullInteractor,
+    )
+    .unwrap();
     assert!(plan.iter().all(|p| p.action == ImportAction::Create));
     let report = execute_plan(&target, &plan, false).unwrap();
     assert_eq!(report.exit_code(), 0);
@@ -150,9 +179,25 @@ fn non_tty_without_answer_blocks_cleanly_with_exit_code_one() {
         answers: None,
         target_folder: None,
     };
-    let plan = build_plan(&target, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+    let plan = build_plan(
+        &target,
+        &manifest,
+        &xmls,
+        &options,
+        &resolver,
+        &NullInteractor,
+    )
+    .unwrap();
     let report = execute_plan(&target, &plan, false).unwrap();
-    assert_eq!(report.created.len(), 1, "la tache SYSTEM doit passer sans intervention");
-    assert_eq!(report.blocked.len(), 1, "la tache avec mot de passe doit etre bloquee");
+    assert_eq!(
+        report.created.len(),
+        1,
+        "la tache SYSTEM doit passer sans intervention"
+    );
+    assert_eq!(
+        report.blocked.len(),
+        1,
+        "la tache avec mot de passe doit etre bloquee"
+    );
     assert_eq!(report.exit_code(), 1);
 }

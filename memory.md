@@ -358,9 +358,9 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
       49 fichiers) : édition des actions avant restauration (moteur `action.rs`, bouton
       « Modifier l'action… », `action_overrides`), CHANGELOG/guides/README alignés,
       binaires reconstruits, CI verte.
-- [ ] **`cargo fmt`** : le dépôt n'a jamais été formaté (diffs rustfmt massifs partout) — à faire
-      dans un commit dédié, sans mélanger avec d'autres sujets, puis ajouter `cargo fmt --check`
-      à `ci.yml` (ne pas l'activer avant). `clippy` est déjà propre hors remarques de style.
+- [x] **`cargo fmt`** (2026-10-25) : les deux crates formatés (`rustfmt` 1.9.0, aucune config
+      locale), 18 fichiers, +959/-306, dans un commit dédié ; `cargo fmt --check` ajouté à
+      `ci.yml`. Tests inchangés (73 + 4, 26 + 1). `clippy` reste propre hors remarques de style.
 - [ ] Vérifier la fermeture sur un **vrai** Windows Server 2016/2019 : non reproductible sur
       Win11 (le binaire 1.1.0 y fermait déjà proprement) ; le correctif est déterministe par
       construction (`process::exit` avant toute déconnexion).

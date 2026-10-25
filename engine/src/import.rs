@@ -12,9 +12,11 @@ use std::fs;
 use std::path::{Component, Path, PathBuf};
 
 use crate::answers::{is_well_known_account, AnswerFile};
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 use crate::hash::sha256_hex;
-use crate::model::{ConflictPolicy, ExecutionReport, ImportAction, LogonType, Manifest, TaskRecord};
+use crate::model::{
+    ConflictPolicy, ExecutionReport, ImportAction, LogonType, Manifest, TaskRecord,
+};
 use crate::password::PasswordResolver;
 use crate::scheduler::TaskSchedulerApi;
 use crate::wizard::Interactor;
@@ -250,8 +252,8 @@ pub fn load_and_verify(dir: &Path) -> Result<(Manifest, HashMap<String, String>)
         path: manifest_path.display().to_string(),
         source: e,
     })?;
-    let manifest: Manifest = serde_json::from_str(&raw)
-        .map_err(|e| BackupError::InvalidManifest(format!("{e}")))?;
+    let manifest: Manifest =
+        serde_json::from_str(&raw).map_err(|e| BackupError::InvalidManifest(format!("{e}")))?;
     if manifest.version != Manifest::CURRENT_VERSION {
         return Err(BackupError::InvalidManifest(format!(
             "version de manifeste non supportee: {}",
@@ -441,7 +443,8 @@ pub fn build_plan(
                     .or_else(|| answer_user_map.get(&source_user))
                 {
                     target_user = Some(mapped.clone());
-                } else if let Some(mapped) = interactor.ask_user_mapping(&source_user, &target_path) {
+                } else if let Some(mapped) = interactor.ask_user_mapping(&source_user, &target_path)
+                {
                     target_user = Some(mapped);
                 } else {
                     push_and_continue!(ImportAction::UserUnmapped { source_user });
@@ -516,8 +519,7 @@ pub fn execute_plan_with_undo(
     let mut report = ExecutionReport::default();
     let mut sauvegardes: Vec<(String, String, String)> = Vec::new();
 
-    if !dry_run && plan.iter().any(|p| p.action.is_writing()) && !scheduler.has_write_privileges()
-    {
+    if !dry_run && plan.iter().any(|p| p.action.is_writing()) && !scheduler.has_write_privileges() {
         return Err(BackupError::AccessDenied {
             operation: "import (RegisterTask)".to_string(),
         });
@@ -553,7 +555,9 @@ pub fn execute_plan_with_undo(
                 }
                 let folder = crate::scheduler::parent_folder(&item.target_path);
                 if let Err(e) = scheduler.ensure_folder(&folder) {
-                    report.failed.push((item.target_path.clone(), e.to_string()));
+                    report
+                        .failed
+                        .push((item.target_path.clone(), e.to_string()));
                     continue;
                 }
                 let result = scheduler.register_task(
@@ -569,7 +573,9 @@ pub fn execute_plan_with_undo(
                         ImportAction::Update => report.updated.push(item.target_path.clone()),
                         _ => unreachable!(),
                     },
-                    Err(e) => report.failed.push((item.target_path.clone(), e.to_string())),
+                    Err(e) => report
+                        .failed
+                        .push((item.target_path.clone(), e.to_string())),
                 }
             }
             ImportAction::SkipIdentical | ImportAction::SkippedByChoice => {
@@ -685,7 +691,9 @@ mod tests {
         )
     }
 
-    fn manifest_and_xmls(entries: Vec<(TaskRecord, String)>) -> (Manifest, HashMap<String, String>) {
+    fn manifest_and_xmls(
+        entries: Vec<(TaskRecord, String)>,
+    ) -> (Manifest, HashMap<String, String>) {
         let mut xmls = HashMap::new();
         let mut records = Vec::new();
         for (r, xml) in entries {
@@ -708,7 +716,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan.len(), 1);
         assert_eq!(plan[0].action, ImportAction::Create);
 
@@ -731,10 +747,22 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         let report = execute_plan(&scheduler, &plan, true).unwrap();
         assert_eq!(report.created, vec!["\\A\\NoSecret".to_string()]);
-        assert_eq!(scheduler.registration_count(), 0, "dry-run ne doit rien ecrire");
+        assert_eq!(
+            scheduler.registration_count(),
+            0,
+            "dry-run ne doit rien ecrire"
+        );
     }
 
     #[test]
@@ -758,7 +786,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkipIdentical);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.skipped, vec!["\\A\\Same".to_string()]);
@@ -785,7 +821,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Conflict);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.blocked.len(), 1);
@@ -812,7 +856,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Update);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.updated, vec!["\\A\\Diff".to_string()]);
@@ -837,7 +889,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         match &plan[0].action {
             ImportAction::PasswordRequired { user } => assert_eq!(user, "DOMAIN\\alice"),
             other => panic!("expected PasswordRequired, got {other:?}"),
@@ -864,7 +924,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkippedByChoice);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.skipped, vec!["\\A\\WithPw".to_string()]);
@@ -891,7 +959,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Create);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.created, vec!["\\A\\WithPw".to_string()]);
@@ -915,7 +991,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         match &plan[0].action {
             ImportAction::UserUnmapped { source_user } => assert_eq!(source_user, "OLDPC\\bob"),
             other => panic!("expected UserUnmapped, got {other:?}"),
@@ -942,14 +1026,27 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Create);
         assert_eq!(plan[0].target_user, Some("NEWPC\\bob".to_string()));
     }
 
     #[test]
     fn well_known_account_needs_no_mapping() {
-        let (r, xml) = record("\\A\\Sys", LogonType::S4U, Some("SYSTEM"), "<Task>sys</Task>");
+        let (r, xml) = record(
+            "\\A\\Sys",
+            LogonType::S4U,
+            Some("SYSTEM"),
+            "<Task>sys</Task>",
+        );
         let (manifest, xmls) = manifest_and_xmls(vec![(r, xml)]);
         let scheduler = MockScheduler::new(true);
         let resolver = PasswordResolver::new(None, None, false);
@@ -960,7 +1057,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Create);
     }
 
@@ -977,7 +1082,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         let result = execute_plan(&scheduler, &plan, false);
         assert!(matches!(result, Err(BackupError::AccessDenied { .. })));
     }
@@ -998,7 +1111,10 @@ mod tests {
             "\\Restore-2026-01-01\\A\\B\\Task"
         );
         // Les slashes superflus du dossier sont nettoyes, la structure source conservee.
-        assert_eq!(remap_path("\\A\\Task", Some("Restore\\")), "\\Restore\\A\\Task");
+        assert_eq!(
+            remap_path("\\A\\Task", Some("Restore\\")),
+            "\\Restore\\A\\Task"
+        );
     }
 
     #[test]
@@ -1014,7 +1130,15 @@ mod tests {
             answers: None,
             target_folder: Some("\\Restore".to_string()),
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].target_path, "\\Restore\\A\\NoSecret");
         assert_eq!(plan[0].action, ImportAction::Create);
 
@@ -1049,7 +1173,15 @@ mod tests {
             answers: None,
             target_folder: Some("\\Restore".to_string()),
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkipIdentical);
         assert_eq!(plan[0].target_path, "\\Restore\\A\\Same");
         let report = execute_plan(&scheduler, &plan, false).unwrap();
@@ -1080,7 +1212,15 @@ mod tests {
             answers: Some(&answers),
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Create);
         assert!(
             plan[0].xml.contains(r"<Command>D:\Scripts\a.exe</Command>"),
@@ -1091,8 +1231,14 @@ mod tests {
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.exit_code(), 0);
         let written = scheduler.get_task_xml("\\A\\Job").unwrap();
-        assert!(written.contains(r"D:\Scripts\a.exe"), "ecriture avec la surcharge");
-        assert!(!written.contains("<Command>a.exe"), "l'ancien programme ne subsiste pas");
+        assert!(
+            written.contains(r"D:\Scripts\a.exe"),
+            "ecriture avec la surcharge"
+        );
+        assert!(
+            !written.contains("<Command>a.exe"),
+            "l'ancien programme ne subsiste pas"
+        );
     }
 
     #[test]
@@ -1119,7 +1265,15 @@ mod tests {
             answers: None,
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &sans, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &sans,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkipIdentical);
 
         let mut answers = AnswerFile::default();
@@ -1137,7 +1291,15 @@ mod tests {
             answers: Some(&answers),
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &avec, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &avec,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(
             plan[0].action,
             ImportAction::Conflict,
@@ -1151,7 +1313,15 @@ mod tests {
             answers: Some(&answers),
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &ecrase, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &ecrase,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Update);
         let report = execute_plan(&scheduler, &plan, false).unwrap();
         assert_eq!(report.updated, vec!["\\A\\Job".to_string()]);
@@ -1190,13 +1360,22 @@ mod tests {
             answers: Some(&answers),
             target_folder: None,
         };
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor).unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkipIdentical);
     }
 
     #[test]
     fn action_override_sans_action_exec_fait_echouer_le_plan() {
-        let xml = r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
+        let xml =
+            r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
         let (r, xml_owned) = record("\\A\\Job", LogonType::None, None, xml);
         let (manifest, xmls) = manifest_and_xmls(vec![(r, xml_owned)]);
         let scheduler = MockScheduler::new(true);
@@ -1219,7 +1398,14 @@ mod tests {
         };
         // Pas de `unwrap_err()` ici : `PlanItem` ne derive volontairement
         // pas `Debug` (il peut porter un mot de passe).
-        let err = match build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor) {
+        let err = match build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        ) {
             Err(e) => e,
             Ok(_) => panic!("le plan doit echouer sur une surcharge sans action Exec"),
         };
@@ -1303,20 +1489,21 @@ mod tests {
     fn chemin_de_tache_duplique_dans_le_manifeste_est_refuse() {
         for (premier, second) in [("\\A", "\\A"), ("\\A", "\\a")] {
             let dir = tempfile::tempdir().unwrap();
-            let tasks: Vec<TaskRecord> = [("A.xml", "<Task>un</Task>"), ("B.xml", "<Task>deux</Task>")]
-                .into_iter()
-                .zip([premier, second])
-                .map(|((fichier, xml), chemin)| {
-                    std::fs::write(dir.path().join(fichier), xml).unwrap();
-                    TaskRecord {
-                        path: chemin.to_string(),
-                        xml_file: fichier.to_string(),
-                        sha256: sha256_hex(xml.as_bytes()),
-                        user_id: None,
-                        logon_type: LogonType::None,
-                    }
-                })
-                .collect();
+            let tasks: Vec<TaskRecord> =
+                [("A.xml", "<Task>un</Task>"), ("B.xml", "<Task>deux</Task>")]
+                    .into_iter()
+                    .zip([premier, second])
+                    .map(|((fichier, xml), chemin)| {
+                        std::fs::write(dir.path().join(fichier), xml).unwrap();
+                        TaskRecord {
+                            path: chemin.to_string(),
+                            xml_file: fichier.to_string(),
+                            sha256: sha256_hex(xml.as_bytes()),
+                            user_id: None,
+                            logon_type: LogonType::None,
+                        }
+                    })
+                    .collect();
             std::fs::write(
                 dir.path().join("manifest.json"),
                 serde_json::to_string(&Manifest::new("H".to_string(), tasks)).unwrap(),
@@ -1349,7 +1536,10 @@ mod tests {
         for (fichier, enregistrements) in [
             ("A.xml", [("\\A", "A.xml"), ("\\B", "A.xml")]),
             ("A.xml", [("\\A", "A.xml"), ("\\B", "A.XML")]),
-            ("sous/A.xml", [("\\A", "sous/A.xml"), ("\\B", "sous\\A.xml")]),
+            (
+                "sous/A.xml",
+                [("\\A", "sous/A.xml"), ("\\B", "sous\\A.xml")],
+            ),
         ] {
             let dir = tempfile::tempdir().unwrap();
             let chemin = dir.path().join(fichier);
@@ -1401,9 +1591,9 @@ mod tests {
     #[test]
     fn nom_de_fichier_xml_invalide_est_refuse() {
         for mauvais in [
-            "A.xml ",        // espace final : supprime par Win32
-            "A.xml.",        // point final : supprime par Win32
-            "A.xml::$DATA",  // flux NTFS par defaut
+            "A.xml ",       // espace final : supprime par Win32
+            "A.xml.",       // point final : supprime par Win32
+            "A.xml::$DATA", // flux NTFS par defaut
             "A?.xml",
             "A*.xml",
             "A<.xml",
@@ -1476,7 +1666,10 @@ mod tests {
     #[test]
     fn document_xml_incomplet_est_refuse() {
         for (xml, motif) in [
-            (r#"<?xml version="1.0" encoding="UTF-8"?>"#, "aucun element racine"),
+            (
+                r#"<?xml version="1.0" encoding="UTF-8"?>"#,
+                "aucun element racine",
+            ),
             ("<Task/>junk", "hors de l'element racine"),
             ("<Task/><Task/>", "plusieurs elements racine"),
             ("<Task/><![CDATA[x]]>", "CDATA"),
@@ -1561,8 +1754,15 @@ mod tests {
             target_folder: None,
         };
         let resolver = PasswordResolver::new(None, None, false);
-        let plan = build_plan(scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor)
-            .unwrap();
+        let plan = build_plan(
+            scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
         assert_eq!(plan[0].action, ImportAction::Update);
         plan
     }
@@ -1670,7 +1870,12 @@ mod tests {
         let report = execute_plan_with_undo(&scheduler, &plan, false, Some(&dir)).unwrap();
         assert!(report.updated.is_empty(), "aucun ecrasement");
         assert_eq!(scheduler.registration_count(), 0, "aucune ecriture");
-        assert_eq!(report.failed.len(), 1, "echecs inattendus : {:?}", report.failed);
+        assert_eq!(
+            report.failed.len(),
+            1,
+            "echecs inattendus : {:?}",
+            report.failed
+        );
         assert!(
             report.failed[0].1.contains("sauvegarde impossible"),
             "message inattendu : {:?}",
@@ -1709,8 +1914,15 @@ mod tests {
             target_folder: None,
         };
         let resolver = PasswordResolver::new(None, None, false);
-        let plan = build_plan(&scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor)
-            .unwrap();
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
 
         let tmp = tempfile::tempdir().unwrap();
         let dir = tmp.path().join("undo");

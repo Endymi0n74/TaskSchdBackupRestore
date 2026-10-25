@@ -149,7 +149,10 @@ mod tests {
         fs::write(&old, "ancien").unwrap();
         assert!(old.exists());
         init_logging();
-        assert!(!old.exists(), "les journaux de plus de 14 jours sont purges");
+        assert!(
+            !old.exists(),
+            "les journaux de plus de 14 jours sont purges"
+        );
 
         std::env::remove_var("TASKSCHDBACKUPRESTORE_LOG_DIR");
     }

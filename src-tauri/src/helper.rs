@@ -28,7 +28,9 @@ use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
 
 use taskschdbackuprestore::answers::AnswerFile;
-use taskschdbackuprestore::import::{build_plan, execute_plan_with_undo, load_and_verify, ImportOptions};
+use taskschdbackuprestore::import::{
+    build_plan, execute_plan_with_undo, load_and_verify, ImportOptions,
+};
 use taskschdbackuprestore::password::PasswordResolver;
 use taskschdbackuprestore::scheduler::TaskSchedulerApi;
 use taskschdbackuprestore::wizard::NullInteractor;
@@ -160,14 +162,32 @@ pub fn run_helper_args(args: &[String]) -> i32 {
 
     let result = match commands::make_scheduler() {
         Ok(scheduler) => {
-            let outcome =
-                helper_import_with(&log, scheduler.as_ref(), Path::new(&dir), &answers, dry_run, target_folder.as_deref());
+            let outcome = helper_import_with(
+                &log,
+                scheduler.as_ref(),
+                Path::new(&dir),
+                &answers,
+                dry_run,
+                target_folder.as_deref(),
+            );
             match outcome {
-                Ok(report) => HelperResult { ok: true, error: None, report: Some(report) },
-                Err(e) => HelperResult { ok: false, error: Some(e), report: None },
+                Ok(report) => HelperResult {
+                    ok: true,
+                    error: None,
+                    report: Some(report),
+                },
+                Err(e) => HelperResult {
+                    ok: false,
+                    error: Some(e),
+                    report: None,
+                },
             }
         }
-        Err(e) => HelperResult { ok: false, error: Some(e), report: None },
+        Err(e) => HelperResult {
+            ok: false,
+            error: Some(e),
+            report: None,
+        },
     };
 
     let write_ok = write_json(Path::new(&result_path), &result).is_ok();
@@ -198,11 +218,26 @@ pub(crate) fn helper_import_with(
         target_folder: target_folder.map(str::to_string),
     };
 
-    let plan = build_plan(scheduler, &manifest, &xmls, &options, &resolver, &NullInteractor)
-        .map_err(|e| e.to_string())?;
+    let plan = build_plan(
+        scheduler,
+        &manifest,
+        &xmls,
+        &options,
+        &resolver,
+        &NullInteractor,
+    )
+    .map_err(|e| e.to_string())?;
 
-    let verb = if dry_run { "Simulation d'import (helper)" } else { "Import (helper)" };
-    log.info(&format!("{verb} depuis {} ({} tâche(s))", dir.display(), plan.len()));
+    let verb = if dry_run {
+        "Simulation d'import (helper)"
+    } else {
+        "Import (helper)"
+    };
+    log.info(&format!(
+        "{verb} depuis {} ({} tâche(s))",
+        dir.display(),
+        plan.len()
+    ));
 
     let undo = (!dry_run).then(taskschdbackuprestore::import::default_undo_dir);
     let report = execute_plan_with_undo(scheduler, &plan, dry_run, undo.as_deref())
@@ -284,7 +319,9 @@ pub fn run_elevated_import(
     cleanup(&answers_path, &result_path);
 
     if !result.ok {
-        return Err(result.error.unwrap_or_else(|| "échec du processus administrateur".to_string()));
+        return Err(result
+            .error
+            .unwrap_or_else(|| "échec du processus administrateur".to_string()));
     }
     result
         .report
@@ -461,10 +498,13 @@ mod tests {
         make_archive(archive.path());
 
         let mut answers = AnswerFile::default();
-        answers.passwords.insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
+        answers
+            .passwords
+            .insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
 
         let target = MockScheduler::new(true);
-        let report = helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
+        let report =
+            helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
         assert_eq!(report.created.len(), 2);
         assert_eq!(report.exit_code, 0);
         assert_eq!(target.registration_count(), 2, "l'import réel doit écrire");
@@ -475,8 +515,15 @@ mod tests {
             .flatten()
             .map(|e| e.path())
             .collect();
-        let content = files.iter().map(|f| std::fs::read_to_string(f).unwrap()).collect::<Vec<_>>().join("\n");
-        assert!(!content.contains("s3cret"), "le mot de passe ne doit jamais être journalisé");
+        let content = files
+            .iter()
+            .map(|f| std::fs::read_to_string(f).unwrap())
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            !content.contains("s3cret"),
+            "le mot de passe ne doit jamais être journalisé"
+        );
         assert!(content.contains("Import (helper)"));
     }
 
@@ -488,16 +535,32 @@ mod tests {
         make_archive(archive.path());
 
         let mut answers = AnswerFile::default();
-        answers.passwords.insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
+        answers
+            .passwords
+            .insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
 
         let target = MockScheduler::new(true);
-        let report = helper_import_with(&log, &target, archive.path(), &answers, false, Some("\\Restore-2026"))
-            .unwrap();
+        let report = helper_import_with(
+            &log,
+            &target,
+            archive.path(),
+            &answers,
+            false,
+            Some("\\Restore-2026"),
+        )
+        .unwrap();
         assert_eq!(report.created.len(), 2);
         // La structure source est preservée sous le dossier cible.
-        assert!(target.task_exists("\\Restore-2026\\Backup\\Nightly").unwrap());
-        assert!(target.task_exists("\\Restore-2026\\Backup\\Weekly").unwrap());
-        assert!(!target.task_exists("\\Backup\\Nightly").unwrap(), "rien ne doit être écrit au chemin source");
+        assert!(target
+            .task_exists("\\Restore-2026\\Backup\\Nightly")
+            .unwrap());
+        assert!(target
+            .task_exists("\\Restore-2026\\Backup\\Weekly")
+            .unwrap());
+        assert!(
+            !target.task_exists("\\Backup\\Nightly").unwrap(),
+            "rien ne doit être écrit au chemin source"
+        );
     }
 
     #[test]
@@ -509,10 +572,23 @@ mod tests {
 
         let answers = AnswerFile::default();
         let target = MockScheduler::new(true);
-        let report = helper_import_with(&log, &target, archive.path(), &answers, true, None).unwrap();
-        assert_eq!(report.created.len(), 1, "la tâche SYSTEM passe sans mot de passe");
-        assert_eq!(report.blocked.len(), 1, "la tâche avec mot de passe reste bloquée");
-        assert_eq!(target.registration_count(), 0, "le dry-run ne doit rien écrire");
+        let report =
+            helper_import_with(&log, &target, archive.path(), &answers, true, None).unwrap();
+        assert_eq!(
+            report.created.len(),
+            1,
+            "la tâche SYSTEM passe sans mot de passe"
+        );
+        assert_eq!(
+            report.blocked.len(),
+            1,
+            "la tâche avec mot de passe reste bloquée"
+        );
+        assert_eq!(
+            target.registration_count(),
+            0,
+            "le dry-run ne doit rien écrire"
+        );
     }
 
     #[test]
@@ -524,7 +600,8 @@ mod tests {
 
         let answers = AnswerFile::default();
         let target = MockScheduler::new(true);
-        let report = helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
+        let report =
+            helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
         assert_eq!(report.created.len(), 1);
         assert_eq!(report.blocked.len(), 1);
         assert_eq!(report.exit_code, 1, "tâche bloquée => code 1, pas 2");
@@ -533,8 +610,12 @@ mod tests {
     #[test]
     fn answer_file_roundtrip_carries_passwords() {
         let mut decisions = ImportDecisions::default();
-        decisions.conflicts.insert("\\A".to_string(), "overwrite".to_string());
-        decisions.user_map.insert("OLDPC\\bob".to_string(), "NEWPC\\bob".to_string());
+        decisions
+            .conflicts
+            .insert("\\A".to_string(), "overwrite".to_string());
+        decisions
+            .user_map
+            .insert("OLDPC\\bob".to_string(), "NEWPC\\bob".to_string());
         decisions.skip_tasks.push("\\SkipMe".to_string());
         decisions.action_overrides.insert(
             "\\Backup\\Nightly".to_string(),
@@ -549,12 +630,18 @@ mod tests {
 
         let mut answers = commands::build_answers(Some(&decisions));
         answers.passwords = passwords;
-        assert_eq!(answers.passwords.get("NEWPC\\bob").map(String::as_str), Some("m0t de passe"));
+        assert_eq!(
+            answers.passwords.get("NEWPC\\bob").map(String::as_str),
+            Some("m0t de passe")
+        );
         assert!(matches!(
             answers.conflict_decisions.get("\\A"),
             Some(ConflictDecision::Overwrite)
         ));
-        assert_eq!(answers.user_map.get("OLDPC\\bob").map(String::as_str), Some("NEWPC\\bob"));
+        assert_eq!(
+            answers.user_map.get("OLDPC\\bob").map(String::as_str),
+            Some("NEWPC\\bob")
+        );
         assert!(answers.skip_tasks.contains(&"\\SkipMe".to_string()));
         let override_ = answers
             .action_overrides
@@ -568,9 +655,15 @@ mod tests {
         let path = dir.path().join("answers.json");
         write_json(&path, &answers).unwrap();
         let loaded = AnswerFile::load(&path).unwrap();
-        assert_eq!(loaded.passwords.get("NEWPC\\bob").map(String::as_str), Some("m0t de passe"));
         assert_eq!(
-            loaded.action_overrides.get("\\Backup\\Nightly").and_then(|o| o.command.as_deref()),
+            loaded.passwords.get("NEWPC\\bob").map(String::as_str),
+            Some("m0t de passe")
+        );
+        assert_eq!(
+            loaded
+                .action_overrides
+                .get("\\Backup\\Nightly")
+                .and_then(|o| o.command.as_deref()),
             Some("D:\\Scripts\\a.exe"),
             "les surcharges d'action survivent au passage par le fichier de réponses"
         );
@@ -584,7 +677,9 @@ mod tests {
         make_archive(archive.path());
 
         let mut answers = AnswerFile::default();
-        answers.passwords.insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
+        answers
+            .passwords
+            .insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
         answers.action_overrides.insert(
             "\\Backup\\Nightly".to_string(),
             taskschdbackuprestore::action::ActionOverride {
@@ -594,10 +689,14 @@ mod tests {
         );
 
         let target = MockScheduler::new(true);
-        let report = helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
+        let report =
+            helper_import_with(&log, &target, archive.path(), &answers, false, None).unwrap();
         assert_eq!(report.created.len(), 2);
         let written = target.get_task_xml("\\Backup\\Nightly").unwrap();
-        assert!(written.contains("D:\\Scripts\\a.exe"), "le helper écrit le XML modifié: {written}");
+        assert!(
+            written.contains("D:\\Scripts\\a.exe"),
+            "le helper écrit le XML modifié: {written}"
+        );
         assert!(!written.contains("<Command>a.exe</Command>"));
         // L'autre tâche, sans surcharge, est écrite à l'identique.
         let other = target.get_task_xml("\\Backup\\Weekly").unwrap();
@@ -623,7 +722,8 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("result.json");
         write_json(&path, &result).unwrap();
-        let parsed: HelperResult = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        let parsed: HelperResult =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
         assert!(parsed.ok);
         assert_eq!(parsed.report.unwrap().created, vec!["\\A".to_string()]);
     }
@@ -732,7 +832,10 @@ mod tests {
 
         let removed = purge_work_files_in(dir.path(), None);
         assert_eq!(removed, 2, "réponses + résultat doivent être purgés");
-        assert!(dir.path().join("notes.txt").exists(), "les autres fichiers restent");
+        assert!(
+            dir.path().join("notes.txt").exists(),
+            "les autres fichiers restent"
+        );
         // Idempotent : rien de plus à supprimer.
         assert_eq!(purge_work_files_in(dir.path(), None), 0);
     }
