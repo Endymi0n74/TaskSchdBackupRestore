@@ -5,9 +5,8 @@ en complément de [`README.md`](README.md) et [`AGENTS.md`](AGENTS.md).
 
 ## En bref
 
-- **Statut** : rouvert le 2026-10-25 — revue de code et renommage d'identité, travail
-  **non commité** sur `fix/revue-sauvegarde` ; dernier état **publié** : **1.1.2** sur `master`,
-  **1.2.0** construit et assemblé localement (non publié). Sujet **sans rapport** avec
+- **Statut** : rouvert le 2026-10-25 pour une revue de code et un renommage d'identité,
+  **publié** le même jour : **1.2.0** sur `master`. Sujet **sans rapport** avec
   `SteamAchievementManager` (SAM, `D:\Codex\SteamAchievementManager`, clos lui aussi le
   même jour) ni avec l'outillage **REA** (`D:\Codex\tools\memory.md`) : trois entrées
   indépendantes, ne pas les mélanger. **Ne pas rouvrir sans demande explicite.**
@@ -16,7 +15,7 @@ en complément de [`README.md`](README.md) et [`AGENTS.md`](AGENTS.md).
   GitHub sous **TaskSchdBackupRestore** (`Endymi0n74/TaskSchdBackupRestore`).
 - **Deux interfaces, un moteur** : `TaskSchdBackupRestore` (crate Rust + CLI) et `TaskSchdBackupRestoreGui.exe`
   (Tauri 2). Livraison portable dans `dist/`.
-- **Dernière version** : **1.2.0** (2026-10-25, non publiée) — renommage d'identité et
+- **Dernière version** : **1.2.0** (2026-10-25) — renommage d'identité et
   correctifs de sûreté de données (collision de noms à l'export, archives refusées à la
   validation, écrasement réversible). Avant elle : **1.1.2** (2026-10-07) — édition des
   actions avant restauration ; **1.1.1** (2026-10-06) — sortie déterministe à la fermeture (processus
@@ -231,15 +230,17 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   une par une en CLI, export de 173 tâches revalidé après chaque correctif, ligne de l'import
   élevé relue par `CommandLineToArgvW` **et** par un lancement réel, e2e `#[ignore]` rejoué.
 
-- **2026-10-25 (release 1.2.0, non publiée)** — Version unifiée **1.2.0** dans les trois
+- **2026-10-25 (release 1.2.0)** — Version unifiée **1.2.0** dans les trois
   fichiers canoniques ; CHANGELOG (entrée 1.2.0 : identité + robustesse), guide (chip et
   pied de page), README FR/EN, AGENTS.md §7 alignés, PDF régénérés (`-Action Build`, empreintes
   enregistrées). Binaires reconstruits (`TaskSchdBackupRestore 1.2.0`, `FileVersion` 1.2.0)
   recopiés dans `dist/`, livrable assemblé par `tools/make-release.ps1` :
   `release/TaskSchdBackupRestore-1.2.0-windows/` + `.zip`, 49 fichiers (CLI `3ed987d4…`,
   interface `a8504646…`, zip `e1b51380…`), notes dans `release/RELEASE-NOTES-1.2.0.md`.
-  Tests 73 + 4 et 26 + 1 verts. **Rien n'est poussé** : commit, tag `v1.2.0` et release
-  GitHub restent à faire.
+  Tests 73 + 4 et 26 + 1 verts. **Publication** : commit `096a1db` sur
+  `fix/revue-sauvegarde`, fusion **fast-forward** dans `master` (le tag `v1.2.0` pointe
+  donc sur le même commit), release GitHub « TaskSchdBackupRestore 1.2.0 » publiée avec
+  le zip (4 921 025 octets) ; CI et Guide PDF verts sur `096a1db`.
 
 ## Décisions structurantes
 
@@ -359,6 +360,6 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
       (`read_action`/`apply_action`, première action `Exec`), surcharges transportées par
       `action_overrides` (décisions GUI → answer-file CLI → helper élevé), bouton
       « Modifier l'action… » dans le plan de l'interface, guide 4.2 + README/MIGRATION.
-- [x] **Release 1.2.0** construite le 2026-10-25 (`TaskSchdBackupRestore-1.2.0-windows.zip`,
-      49 fichiers) : identité + correctifs de sûreté. **Non publiée** : commit, tag `v1.2.0`,
-      release GitHub et push à faire.
+- [x] **Release 1.2.0** publiée le 2026-10-25 (`v1.2.0` +
+      `TaskSchdBackupRestore-1.2.0-windows.zip`, 49 fichiers) : identité unifiée + correctifs
+      de sûreté ; `master` fusionné en fast-forward, CI et Guide PDF vertes.
