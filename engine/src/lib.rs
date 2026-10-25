@@ -70,7 +70,10 @@ fn migrate_legacy_data(base: &Path) {
 
 /// Copie recursive `ancien` vers `nouveau` sans ecraser un fichier existant.
 fn copy_tree(ancien: &Path, nouveau: &Path) -> std::io::Result<()> {
-    for entree in walkdir::WalkDir::new(ancien).into_iter().filter_map(Result::ok) {
+    for entree in walkdir::WalkDir::new(ancien)
+        .into_iter()
+        .filter_map(Result::ok)
+    {
         if !entree.file_type().is_file() {
             continue;
         }
@@ -124,7 +127,12 @@ mod tests_donnees {
 
         let nouveau = base.path().join(APP_DIR);
         assert_eq!(
-            fs::read_to_string(nouveau.join("logs").join(format!("{APP_DIR}-2026-01-01.log"))).unwrap(),
+            fs::read_to_string(
+                nouveau
+                    .join("logs")
+                    .join(format!("{APP_DIR}-2026-01-01.log"))
+            )
+            .unwrap(),
             "vieux",
             "le journal repris doit porter le nouveau prefixe"
         );
@@ -135,10 +143,21 @@ mod tests_donnees {
         );
 
         // Une seconde reprise ne reecrit rien : le fichier en place gagne.
-        fs::write(nouveau.join("logs").join(format!("{APP_DIR}-2026-01-01.log")), "neuf").unwrap();
+        fs::write(
+            nouveau
+                .join("logs")
+                .join(format!("{APP_DIR}-2026-01-01.log")),
+            "neuf",
+        )
+        .unwrap();
         migrate_legacy_data(base.path());
         assert_eq!(
-            fs::read_to_string(nouveau.join("logs").join(format!("{APP_DIR}-2026-01-01.log"))).unwrap(),
+            fs::read_to_string(
+                nouveau
+                    .join("logs")
+                    .join(format!("{APP_DIR}-2026-01-01.log"))
+            )
+            .unwrap(),
             "neuf"
         );
     }

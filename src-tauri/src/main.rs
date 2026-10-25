@@ -5,7 +5,10 @@ fn main() {
     // Mode helper : import en processus enfant élevé, sans interface.
     // Détecté avant le démarrage de Tauri pour rester un processus léger.
     let args: Vec<String> = std::env::args().collect();
-    if args.iter().any(|a| a == taskschdbackuprestore_gui::helper::HELPER_FLAG) {
+    if args
+        .iter()
+        .any(|a| a == taskschdbackuprestore_gui::helper::HELPER_FLAG)
+    {
         std::process::exit(taskschdbackuprestore_gui::helper::run_helper_args(&args));
     }
     taskschdbackuprestore_gui::run();

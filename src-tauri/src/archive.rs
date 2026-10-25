@@ -68,7 +68,14 @@ pub fn zip_dir(
 
     let mut count = 0usize;
     let mut ignored = 0usize;
-    collect_and_write(&mut writer, src_dir, Path::new(""), options, &mut count, &mut ignored)?;
+    collect_and_write(
+        &mut writer,
+        src_dir,
+        Path::new(""),
+        options,
+        &mut count,
+        &mut ignored,
+    )?;
     writer
         .finish()
         .map_err(|e| format!("clôture de l'archive : {e}"))?;
@@ -99,10 +106,7 @@ fn collect_and_write(
 ) -> Result<(), String> {
     let entries =
         fs::read_dir(fs_dir).map_err(|e| format!("lecture de {} : {e}", fs_dir.display()))?;
-    let mut names: Vec<_> = entries
-        .flatten()
-        .map(|e| e.path())
-        .collect();
+    let mut names: Vec<_> = entries.flatten().map(|e| e.path()).collect();
     // Tri stable : ordre d'archive déterministe (utile pour les tests).
     names.sort();
     for path in names {
@@ -114,8 +118,8 @@ fn collect_and_write(
             writer
                 .start_file(name_str.as_str(), options)
                 .map_err(|e| format!("démarrage de l'entrée '{name_str}' : {e}"))?;
-            let data = fs::read(&path)
-                .map_err(|e| format!("lecture de {} : {e}", path.display()))?;
+            let data =
+                fs::read(&path).map_err(|e| format!("lecture de {} : {e}", path.display()))?;
             writer
                 .write_all(&data)
                 .map_err(|e| format!("écriture de '{name_str}' : {e}"))?;
@@ -236,9 +240,7 @@ fn extract_all(
                 Ok(e) => e,
                 Err(zip::result::ZipError::UnsupportedArchive(
                     zip::result::ZipError::PASSWORD_REQUIRED,
-                )) => {
-                    return Err("archive chiffrée : un mot de passe est requis".to_string())
-                }
+                )) => return Err("archive chiffrée : un mot de passe est requis".to_string()),
                 Err(e) => return Err(format!("entrée {i} : {e}")),
             }
         };
@@ -420,7 +422,8 @@ mod tests {
         {
             let file = fs::File::create(&zip_path).unwrap();
             let mut w = ZipWriter::new(file);
-            w.start_file("../evil.txt", SimpleFileOptions::default()).unwrap();
+            w.start_file("../evil.txt", SimpleFileOptions::default())
+                .unwrap();
             w.write_all(b"pwned").unwrap();
             w.finish().unwrap();
         }
@@ -502,8 +505,15 @@ mod tests {
         unzip_verified(&log, &zip_path, &dest, None).unwrap();
         assert!(dest.join("Nightly.xml").exists());
         assert!(dest.join("manifest.json").exists());
-        assert!(!dest.join("vieux-journal.log").exists(), "entrée étrangère non extraite");
-        assert!(!dest.join("Archive ancienne.zip").exists(), "entrée étrangère non extraite");    }
+        assert!(
+            !dest.join("vieux-journal.log").exists(),
+            "entrée étrangère non extraite"
+        );
+        assert!(
+            !dest.join("Archive ancienne.zip").exists(),
+            "entrée étrangère non extraite"
+        );
+    }
 
     #[test]
     fn subdirectories_are_preserved() {

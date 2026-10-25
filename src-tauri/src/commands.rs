@@ -176,13 +176,27 @@ fn logon_type_label(t: &str) -> String {
 
 fn plan_item_view(item: &PlanItem) -> PlanItemView {
     let (action_kind, target_user, source_user, needs_password) = match &item.action {
-        ImportAction::Create => ("create", item.target_user.clone(), None, item.record.requires_password()),
-        ImportAction::Update => ("update", item.target_user.clone(), None, item.record.requires_password()),
+        ImportAction::Create => (
+            "create",
+            item.target_user.clone(),
+            None,
+            item.record.requires_password(),
+        ),
+        ImportAction::Update => (
+            "update",
+            item.target_user.clone(),
+            None,
+            item.record.requires_password(),
+        ),
         ImportAction::SkipIdentical => ("skip_identical", None, None, false),
         ImportAction::SkippedByChoice => ("skipped", None, None, false),
         ImportAction::Conflict => ("conflict", item.target_user.clone(), None, false),
-        ImportAction::PasswordRequired { user } => ("password_required", Some(user.clone()), None, true),
-        ImportAction::UserUnmapped { source_user } => ("user_unmapped", None, Some(source_user.clone()), false),
+        ImportAction::PasswordRequired { user } => {
+            ("password_required", Some(user.clone()), None, true)
+        }
+        ImportAction::UserUnmapped { source_user } => {
+            ("user_unmapped", None, Some(source_user.clone()), false)
+        }
     };
     // Action éditable de la tâche (première action `Exec`) : lecture
     // best-effort — une tâche sans action exécutable renvoie `None`/0 et
@@ -204,7 +218,10 @@ fn plan_item_view(item: &PlanItem) -> PlanItemView {
 }
 
 /// Convertit un rapport d'exécution métier en vue sérialisable (sans secret).
-pub(crate) fn report_view(report: &taskschdbackuprestore::model::ExecutionReport, dry_run: bool) -> ReportView {
+pub(crate) fn report_view(
+    report: &taskschdbackuprestore::model::ExecutionReport,
+    dry_run: bool,
+) -> ReportView {
     ReportView {
         dry_run,
         created: report.created.clone(),
@@ -264,27 +281,27 @@ pub(crate) fn log_import_report(log: &AppLog, verb: &str, report: &ReportView) {
 
 /// Liste les tâches planifiées (récursif si `recursive`).
 #[tauri::command]
-pub async fn list_tasks(
-    state: AppStateRef<'_>,
-    recursive: bool,
-) -> Result<Vec<TaskView>, String> {
+pub async fn list_tasks(state: AppStateRef<'_>, recursive: bool) -> Result<Vec<TaskView>, String> {
     let scheduler = make_scheduler()?;
     let handles = scheduler.list_tasks(recursive).map_err(|e| e.to_string())?;
     let mut views = Vec::with_capacity(handles.len());
     for handle in &handles {
-        let auth = scheduler.get_task_auth_info(&handle.path).unwrap_or(taskschdbackuprestore::scheduler::TaskAuthInfo {
-            user_id: None,
-            logon_type: taskschdbackuprestore::model::LogonType::None,
-        });
+        let auth = scheduler.get_task_auth_info(&handle.path).unwrap_or(
+            taskschdbackuprestore::scheduler::TaskAuthInfo {
+                user_id: None,
+                logon_type: taskschdbackuprestore::model::LogonType::None,
+            },
+        );
         views.push(TaskView {
             path: handle.path.clone(),
             user_id: auth.user_id,
             logon_type: logon_type_label(&format!("{:?}", auth.logon_type)),
         });
     }
-    state
-        .log
-        .info(&format!("Liste des tâches planifiées : {} trouvée(s)", views.len()));
+    state.log.info(&format!(
+        "Liste des tâches planifiées : {} trouvée(s)",
+        views.len()
+    ));
     Ok(views)
 }
 
@@ -357,8 +374,7 @@ fn export_with(
     // elle est inaccessible), puis l'export part dans un dossier temporaire.
     let staging = match &safe_zip {
         Some(_) => {
-            std::fs::create_dir_all(dir)
-                .map_err(|e| format!("impossible de créer {dir} : {e}"))?;
+            std::fs::create_dir_all(dir).map_err(|e| format!("impossible de créer {dir} : {e}"))?;
             Some(new_staging_dir()?)
         }
         None => None,
@@ -410,8 +426,14 @@ fn write_export(
     zip_name: Option<&str>,
     zip_password: Option<&str>,
 ) -> Result<ExportSummaryView, String> {
-    let summary = export(scheduler, out_dir, true, filter, &taskschdbackuprestore::local_host_name())
-        .map_err(|e| e.to_string())?;
+    let summary = export(
+        scheduler,
+        out_dir,
+        true,
+        filter,
+        &taskschdbackuprestore::local_host_name(),
+    )
+    .map_err(|e| e.to_string())?;
     for path in &summary.exported {
         log.info(&format!("Export : {path}"));
     }
@@ -468,7 +490,13 @@ fn new_staging_dir() -> Result<PathBuf, String> {
 fn sanitize_zip_name(name: &str) -> Result<String, String> {
     let cleaned: String = name
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == ' ' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' || c == ' ' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect();
     let trimmed = cleaned.trim().trim_matches('.').trim();
     if trimmed.is_empty() {
@@ -487,7 +515,10 @@ fn sanitize_zip_name(name: &str) -> Result<String, String> {
 
 /// Vérifie l'intégrité d'une archive d'export (manifeste + empreintes SHA-256 + XML).
 #[tauri::command]
-pub async fn validate_archive(state: AppStateRef<'_>, dir: String) -> Result<ManifestSummary, String> {
+pub async fn validate_archive(
+    state: AppStateRef<'_>,
+    dir: String,
+) -> Result<ManifestSummary, String> {
     validate_archive_impl(&state.log, &dir)
 }
 
@@ -530,7 +561,13 @@ pub async fn import_build_plan(
     decisions: Option<ImportDecisions>,
     target_folder: Option<String>,
 ) -> Result<Vec<PlanItemView>, String> {
-    import_build_plan_impl(&state.log, &state.passwords, &dir, decisions, target_folder.as_deref())
+    import_build_plan_impl(
+        &state.log,
+        &state.passwords,
+        &dir,
+        decisions,
+        target_folder.as_deref(),
+    )
 }
 
 /// Logique de construction du plan (partagée entre la commande et les tests
@@ -569,7 +606,11 @@ fn import_build_plan_impl(
     let views: Vec<PlanItemView> = plan.iter().map(plan_item_view).collect();
     let blocked = views
         .iter()
-        .filter(|v| v.action_kind == "conflict" || v.action_kind == "password_required" || v.action_kind == "user_unmapped")
+        .filter(|v| {
+            v.action_kind == "conflict"
+                || v.action_kind == "password_required"
+                || v.action_kind == "user_unmapped"
+        })
         .count();
     log.info(&format!(
         "Plan d'import établi : {} tâche(s), {} restant(e)(s) à résoudre",
@@ -593,9 +634,9 @@ pub async fn import_set_password(
         map.insert(user.to_lowercase(), password);
     }
     drop(map);
-    state
-        .log
-        .info(&format!("Mot de passe mémorisé en mémoire pour '{user}' (jamais journalisé)"));
+    state.log.info(&format!(
+        "Mot de passe mémorisé en mémoire pour '{user}' (jamais journalisé)"
+    ));
     Ok(())
 }
 
@@ -622,8 +663,16 @@ pub async fn import_execute(
     dry_run: bool,
     target_folder: Option<String>,
 ) -> Result<ReportView, String> {
-    import_execute_impl(&state.log, &state.passwords, &dir, decisions, dry_run, true, target_folder.as_deref())
-        .await
+    import_execute_impl(
+        &state.log,
+        &state.passwords,
+        &dir,
+        decisions,
+        dry_run,
+        true,
+        target_folder.as_deref(),
+    )
+    .await
 }
 
 /// Logique d'import (partagée entre la commande et les tests e2e réels).
@@ -679,7 +728,11 @@ async fn import_execute_impl(
     )
     .map_err(|e| e.to_string())?;
 
-    let verb = if dry_run { "Simulation d'import" } else { "Import" };
+    let verb = if dry_run {
+        "Simulation d'import"
+    } else {
+        "Import"
+    };
     log.info(&format!("{verb} depuis {dir} ({} tâche(s))", plan.len()));
 
     // Écrasements réversibles : le XML actuel de chaque tâche remplacée est
@@ -714,7 +767,12 @@ pub async fn open_log_folder(state: AppStateRef<'_>) -> Result<(), String> {
         .arg(&dir)
         .spawn()
         .map(|_| ())
-        .map_err(|e| format!("impossible d'ouvrir le dossier des logs ({}): {e}", dir.display()))
+        .map_err(|e| {
+            format!(
+                "impossible d'ouvrir le dossier des logs ({}): {e}",
+                dir.display()
+            )
+        })
 }
 
 /// L'application tourne-t-elle avec des droits administrateur ?
@@ -771,7 +829,13 @@ pub async fn extract_zip_auto(
         .unwrap_or_else(|| "archive".to_string());
     let safe: String = name
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect();
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -779,11 +843,14 @@ pub async fn extract_zip_auto(
         .unwrap_or(0);
     let dest = base.join(format!("{safe}-{}-{nanos}", std::process::id()));
 
-    let count = archive::unzip_verified(&state.log, Path::new(&zip_path), &dest, password.as_deref())
-        .map_err(|e| {
-            state.log.warn(&format!("Extraction automatique du .zip refusée ({zip_path}) : {e}"));
-            e
-        })?;
+    let count =
+        archive::unzip_verified(&state.log, Path::new(&zip_path), &dest, password.as_deref())
+            .map_err(|e| {
+                state.log.warn(&format!(
+                    "Extraction automatique du .zip refusée ({zip_path}) : {e}"
+                ));
+                e
+            })?;
     state.log.info(&format!(
         "Archive .zip détectée : extraction automatique de {count} entrée(s) vers {}",
         dest.display()
@@ -818,11 +885,16 @@ pub async fn extract_zip_archive(
     password: Option<String>,
 ) -> Result<usize, String> {
     let log: &AppLog = &state.log;
-    archive::unzip_verified(log, Path::new(&zip_path), Path::new(&dest_dir), password.as_deref())
-        .map_err(|e| {
-            log.warn(&format!("Extraction ZIP refusée ({zip_path}) : {e}"));
-            e
-        })
+    archive::unzip_verified(
+        log,
+        Path::new(&zip_path),
+        Path::new(&dest_dir),
+        password.as_deref(),
+    )
+    .map_err(|e| {
+        log.warn(&format!("Extraction ZIP refusée ({zip_path}) : {e}"));
+        e
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -864,9 +936,9 @@ mod export_archive_tests {
     use super::*;
     use crate::app_log::AppLog;
     use std::collections::BTreeSet;
-    use tempfile::tempdir;
     use taskschdbackuprestore::model::LogonType;
     use taskschdbackuprestore::scheduler::mock::{MockScheduler, MockTask};
+    use tempfile::tempdir;
 
     /// Planificateur simule avec deux taches (aucun acces COM).
     fn sample_scheduler() -> MockScheduler {
@@ -948,9 +1020,15 @@ mod export_archive_tests {
             "la destination ne doit recevoir que le .zip"
         );
         let zip_full = dest.path().join("sauvegarde.zip");
-        assert!(zip_full.is_file(), "le .zip doit exister dans la destination");
+        assert!(
+            zip_full.is_file(),
+            "le .zip doit exister dans la destination"
+        );
         assert_eq!(summary.zip_path.as_deref(), zip_full.to_str());
-        assert!(!summary.zip_encrypted, "aucun mot de passe = pas de chiffrement");
+        assert!(
+            !summary.zip_encrypted,
+            "aucun mot de passe = pas de chiffrement"
+        );
         assert_eq!(summary.exported.len(), 2);
         assert_eq!(summary.skipped_by_filter, 0);
 
@@ -965,13 +1043,8 @@ mod export_archive_tests {
         // L'archive embarque bien les 2 XML + manifest.json (extraction
         // validee par les empreintes SHA-256 du manifeste).
         let extract_dir = logs.path().join("extrait");
-        let count = archive::unzip_verified(
-            &log,
-            &zip_full,
-            &extract_dir,
-            None,
-        )
-        .expect("extraction de l'archive");
+        let count = archive::unzip_verified(&log, &zip_full, &extract_dir, None)
+            .expect("extraction de l'archive");
         assert_eq!(count, 3, "2 XML + manifest.json attendus dans le .zip");
     }
 
@@ -996,9 +1069,19 @@ mod export_archive_tests {
         .expect("export simple");
 
         let names = entry_names(dest.path());
-        assert!(names.contains(&"manifest.json".to_string()), "manifest.json absent : {names:?}");
-        assert_eq!(names.iter().filter(|n| n.ends_with(".xml")).count(), 2, "{names:?}");
-        assert!(!names.iter().any(|n| n.ends_with(".zip")), "aucun .zip attendu : {names:?}");
+        assert!(
+            names.contains(&"manifest.json".to_string()),
+            "manifest.json absent : {names:?}"
+        );
+        assert_eq!(
+            names.iter().filter(|n| n.ends_with(".xml")).count(),
+            2,
+            "{names:?}"
+        );
+        assert!(
+            !names.iter().any(|n| n.ends_with(".zip")),
+            "aucun .zip attendu : {names:?}"
+        );
         assert!(summary.zip_path.is_none());
         assert!(!summary.zip_encrypted);
         assert_eq!(summary.exported.len(), 2);
@@ -1056,18 +1139,9 @@ mod export_archive_tests {
         );
 
         let extract = logs.path().join("extrait");
-        let count = archive::unzip_verified(
-            &log,
-            &dest.path().join("preuve.zip"),
-            &extract,
-            None,
-        )
-        .expect("l'archive du seam doit etre valide apres extraction");
-        assert_eq!(
-            count,
-            noms.len() + 1,
-            "un XML par tache plus le manifeste"
-        );
+        let count = archive::unzip_verified(&log, &dest.path().join("preuve.zip"), &extract, None)
+            .expect("l'archive du seam doit etre valide apres extraction");
+        assert_eq!(count, noms.len() + 1, "un XML par tache plus le manifeste");
 
         // Chaque tache du manifeste extrait possede SON fichier et SON empreinte.
         let (manifest, xmls) = load_and_verify(&extract).expect("archive rechargeable");
@@ -1175,7 +1249,10 @@ mod e2e_tests {
             .filter(|p| !p.starts_with("\\Microsoft"))
             .take(3)
             .collect();
-        assert!(!tasks.is_empty(), "aucune tâche réelle disponible pour le test e2e");
+        assert!(
+            !tasks.is_empty(),
+            "aucune tâche réelle disponible pour le test e2e"
+        );
         eprintln!("== Tâches exportées : {tasks:?}");
 
         // 3. Export réel vers un .zip chiffré AES-256 (même code que l'interface).
@@ -1189,7 +1266,11 @@ mod e2e_tests {
             Some(ZIP_PASSWORD.to_string()),
         )
         .expect("export réel");
-        assert_eq!(summary.exported.len(), tasks.len(), "toutes les tâches sélectionnées exportées");
+        assert_eq!(
+            summary.exported.len(),
+            tasks.len(),
+            "toutes les tâches sélectionnées exportées"
+        );
         assert!(summary.zip_encrypted, "l'archive doit être chiffrée");
         let zip_path = summary.zip_path.expect("chemin du .zip");
         eprintln!("== .zip AES-256 : {zip_path}");
@@ -1197,52 +1278,113 @@ mod e2e_tests {
 
         // 4. Le chiffrement est réel : mauvais mot de passe refusé, aucun dossier créé.
         let bad_dest = tmp.path().join("bad");
-        let bad = archive::unzip_verified(&log, Path::new(&zip_path), &bad_dest, Some("mauvais-mot-de-passe"));
+        let bad = archive::unzip_verified(
+            &log,
+            Path::new(&zip_path),
+            &bad_dest,
+            Some("mauvais-mot-de-passe"),
+        );
         assert!(bad.is_err(), "le mauvais mot de passe doit être refusé");
-        assert!(!bad_dest.exists(), "aucune extraction avec un mauvais mot de passe");
+        assert!(
+            !bad_dest.exists(),
+            "aucune extraction avec un mauvais mot de passe"
+        );
 
         // 5. Bon mot de passe : extraction + validation complète (empreintes SHA-256).
         let good_dest = tmp.path().join("good");
-        let count = archive::unzip_verified(&log, Path::new(&zip_path), &good_dest, Some(ZIP_PASSWORD))
-            .expect("extraction avec le bon mot de passe");
-        eprintln!("== Archive extraite : {count} entrée(s) vers {}", good_dest.display());
-        let validated = validate_archive_impl(&log, good_dest.to_str().unwrap()).expect("validation");
+        let count =
+            archive::unzip_verified(&log, Path::new(&zip_path), &good_dest, Some(ZIP_PASSWORD))
+                .expect("extraction avec le bon mot de passe");
+        eprintln!(
+            "== Archive extraite : {count} entrée(s) vers {}",
+            good_dest.display()
+        );
+        let validated =
+            validate_archive_impl(&log, good_dest.to_str().unwrap()).expect("validation");
         assert!(validated.valid, "manifeste + empreintes valides");
         assert_eq!(validated.task_count, tasks.len());
 
         // 6. Plan : réimport sur la même machine → toutes les tâches sont identiques.
-        let plan = import_build_plan_impl(&log, &passwords, good_dest.to_str().unwrap(), None, None)
-            .expect("construction du plan");
+        let plan =
+            import_build_plan_impl(&log, &passwords, good_dest.to_str().unwrap(), None, None)
+                .expect("construction du plan");
         assert_eq!(plan.len(), tasks.len());
         assert!(
             plan.iter().all(|v| v.action_kind == "skip_identical"),
             "réimport même machine : tout doit être classé identique, obtenu : {:?}",
-            plan.iter().map(|v| (v.path.as_str(), v.action_kind.as_str())).collect::<Vec<_>>()
+            plan.iter()
+                .map(|v| (v.path.as_str(), v.action_kind.as_str()))
+                .collect::<Vec<_>>()
         );
 
         // 7. Simulation puis import réel (en processus : tâches identiques → aucune
         //    écriture, donc aucun besoin d'élévation).
         let decisions = ImportDecisions::default();
-        let dry = block_on(import_execute_impl(&log, &passwords, good_dest.to_str().unwrap(), decisions.clone(), true, false, None))
-            .expect("simulation");
+        let dry = block_on(import_execute_impl(
+            &log,
+            &passwords,
+            good_dest.to_str().unwrap(),
+            decisions.clone(),
+            true,
+            false,
+            None,
+        ))
+        .expect("simulation");
         assert_eq!(dry.exit_code, 0);
-        assert_eq!(dry.skipped.len(), tasks.len(), "simulation : tout ignoré (identique)");
+        assert_eq!(
+            dry.skipped.len(),
+            tasks.len(),
+            "simulation : tout ignoré (identique)"
+        );
 
-        let real = block_on(import_execute_impl(&log, &passwords, good_dest.to_str().unwrap(), decisions, false, false, None))
-            .expect("import réel");
+        let real = block_on(import_execute_impl(
+            &log,
+            &passwords,
+            good_dest.to_str().unwrap(),
+            decisions,
+            false,
+            false,
+            None,
+        ))
+        .expect("import réel");
         assert_eq!(real.exit_code, 0, "aucune écriture nécessaire : code 0");
         assert!(real.failed.is_empty(), "aucun échec : {:?}", real.failed);
-        eprintln!("== Rapport import : créées={} à-jour={} ignorées={} bloquées={} échecs={}",
-            real.created.len(), real.updated.len(), real.skipped.len(), real.blocked.len(), real.failed.len());
+        eprintln!(
+            "== Rapport import : créées={} à-jour={} ignorées={} bloquées={} échecs={}",
+            real.created.len(),
+            real.updated.len(),
+            real.skipped.len(),
+            real.blocked.len(),
+            real.failed.len()
+        );
 
         // 8. Logs : toutes les étapes sont journalisées, le mot de passe jamais.
         let (lines, _) = log.lines_after(0);
-        let ring = lines.iter().map(|l| l.message.as_str()).collect::<Vec<_>>().join("\n");
-        eprintln!("== Journal ({} ligne(s)) :\n{ring}\n==", ring.lines().count());
-        for expected in ["Export terminé", "Archive valide", "Plan d'import établi", "Simulation d'import terminé", "Import terminé"] {
-            assert!(ring.contains(expected), "log attendu : {expected}\n-- obtenu :\n{ring}");
+        let ring = lines
+            .iter()
+            .map(|l| l.message.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+        eprintln!(
+            "== Journal ({} ligne(s)) :\n{ring}\n==",
+            ring.lines().count()
+        );
+        for expected in [
+            "Export terminé",
+            "Archive valide",
+            "Plan d'import établi",
+            "Simulation d'import terminé",
+            "Import terminé",
+        ] {
+            assert!(
+                ring.contains(expected),
+                "log attendu : {expected}\n-- obtenu :\n{ring}"
+            );
         }
-        assert!(!ring.contains(ZIP_PASSWORD), "le mot de passe du .zip ne doit jamais être journalisé (anneau)");
+        assert!(
+            !ring.contains(ZIP_PASSWORD),
+            "le mot de passe du .zip ne doit jamais être journalisé (anneau)"
+        );
 
         let log_files: Vec<_> = std::fs::read_dir(tmp.path().join("logs"))
             .unwrap()
@@ -1254,7 +1396,14 @@ mod e2e_tests {
             .map(|f| std::fs::read_to_string(f).unwrap())
             .collect::<Vec<_>>()
             .join("\n");
-        assert!(!file_content.contains(ZIP_PASSWORD), "le mot de passe du .zip ne doit jamais être journalisé (fichier)");
-        eprintln!("== Logs vérifiés : {} ligne(s), {} fichier(s), secret absent", ring.lines().count(), log_files.len());
+        assert!(
+            !file_content.contains(ZIP_PASSWORD),
+            "le mot de passe du .zip ne doit jamais être journalisé (fichier)"
+        );
+        eprintln!(
+            "== Logs vérifiés : {} ligne(s), {} fichier(s), secret absent",
+            ring.lines().count(),
+            log_files.len()
+        );
     }
 }

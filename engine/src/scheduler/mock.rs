@@ -5,7 +5,7 @@
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 use crate::model::LogonType;
 use crate::scheduler::{TaskAuthInfo, TaskHandle, TaskSchedulerApi};
 

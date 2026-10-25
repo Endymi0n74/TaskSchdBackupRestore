@@ -7,7 +7,7 @@
 use std::fs;
 use std::path::Path;
 
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 use crate::hash::sha256_hex;
 use crate::model::{Manifest, TaskRecord};
 use crate::scheduler::TaskSchedulerApi;
@@ -276,23 +276,34 @@ mod tests {
     fn include_exclude_filters() {
         let scheduler = sample_scheduler();
         let dir = tempdir().unwrap();
-        let filter = PatternFilter::new(vec!["\\Backup\\*".to_string()], vec!["*Weekly".to_string()]);
+        let filter =
+            PatternFilter::new(vec!["\\Backup\\*".to_string()], vec!["*Weekly".to_string()]);
         let summary = export(&scheduler, dir.path(), true, &filter, "TESTHOST").unwrap();
         assert_eq!(summary.exported, vec!["\\Backup\\Nightly".to_string()]);
-        assert!(summary.skipped_by_filter.contains(&"\\Other\\Cleanup".to_string()));
+        assert!(summary
+            .skipped_by_filter
+            .contains(&"\\Other\\Cleanup".to_string()));
     }
 
     #[test]
     fn pattern_filter_glob() {
-        assert!(PatternFilter::matches_one("\\Backup\\*", "\\Backup\\Nightly"));
+        assert!(PatternFilter::matches_one(
+            "\\Backup\\*",
+            "\\Backup\\Nightly"
+        ));
         assert!(PatternFilter::matches_one("*Weekly", "\\Backup\\Weekly"));
         assert!(!PatternFilter::matches_one("*Weekly", "\\Backup\\Nightly"));
-        assert!(PatternFilter::matches_one("\\Backup\\Nightly", "\\Backup\\Nightly"));
+        assert!(PatternFilter::matches_one(
+            "\\Backup\\Nightly",
+            "\\Backup\\Nightly"
+        ));
     }
 
     #[test]
     fn is_microsoft_task_detects_system_folder() {
-        assert!(is_microsoft_task("\\Microsoft\\Windows\\Defrag\\ScheduledDefrag"));
+        assert!(is_microsoft_task(
+            "\\Microsoft\\Windows\\Defrag\\ScheduledDefrag"
+        ));
         assert!(is_microsoft_task("\\microsoft\\Windows\\Update")); // insensible a la casse
         assert!(!is_microsoft_task("\\MicrosoftEdge\\Update"));
         assert!(!is_microsoft_task("\\MSIAfterburner"));
@@ -310,7 +321,10 @@ mod tests {
 
     #[test]
     fn hide_microsoft_filter_composes_with_include() {
-        let filter = PatternFilter::new(vec!["\\Backup\\*".to_string()], vec!["\\Microsoft\\*".to_string()]);
+        let filter = PatternFilter::new(
+            vec!["\\Backup\\*".to_string()],
+            vec!["\\Microsoft\\*".to_string()],
+        );
         assert!(filter.allows("\\Backup\\Nightly"));
         assert!(!filter.allows("\\Microsoft\\Windows\\Backup"));
         assert!(!filter.allows("\\Other\\Task"));
@@ -353,7 +367,11 @@ mod tests {
             5,
             "5 XML distincts attendus, obtenu {names:?}"
         );
-        assert_eq!(names.len(), 6, "5 XML + manifeste attendus, obtenu {names:?}");
+        assert_eq!(
+            names.len(),
+            6,
+            "5 XML + manifeste attendus, obtenu {names:?}"
+        );
 
         // L'archive produite doit se recharger : chaque empreinte correspond
         // bien au XML de sa propre tache (aucun fichier partage).
@@ -380,8 +398,8 @@ mod tests {
     /// manifeste enregistre de toute facon le nom reel).
     #[test]
     fn nom_de_fichier_inchange_pour_un_chemin_sans_souligne() {
-        let scheduler = MockScheduler::new(true)
-            .with_task("\\Backup\\Nightly", task("<Task>n</Task>"));
+        let scheduler =
+            MockScheduler::new(true).with_task("\\Backup\\Nightly", task("<Task>n</Task>"));
         let dir = tempdir().unwrap();
         let filter = PatternFilter::new(vec![], vec![]);
         export(&scheduler, dir.path(), true, &filter, "HOST").unwrap();

@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::IsTerminal;
 
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 
 /// Charge un fichier "user=password" (une entree par ligne, lignes vides et
 /// commentaires '#' ignores). Les cles sont normalisees en minuscules.

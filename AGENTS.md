@@ -72,6 +72,10 @@ cd engine && cargo test && cargo build --release
 # Interface : tests et build release
 cd src-tauri && cargo test && cargo build --release
 
+# Formatage (rustfmt, verifie par la CI)
+cargo fmt --manifest-path engine/Cargo.toml --all
+cargo fmt --manifest-path src-tauri/Cargo.toml --all
+
 # Test de bout en bout réel (Windows + COM, ignoré par défaut)
 cd src-tauri && cargo test e2e_export_zip_aes_then_reimport -- --ignored --nocapture
 

@@ -9,7 +9,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::action::ActionOverride;
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 use crate::model::ConflictPolicy;
 
 /// Contenu structure d'un fichier de reponses, permettant un import

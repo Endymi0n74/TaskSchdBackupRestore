@@ -1,7 +1,7 @@
 # Tests Rust à chaque push / pull request.
 # Le contrôle du guide PDF (guide-pdf.yml) reste le seul autre job :
-# ici on vérifie que les deux crates compilent et que leurs tests passent
-# sur Windows (cibles réelles : COM Task Scheduler, WebView2 présent sur
+# ici on vérifie que les deux crates sont formatés, compilent et que leurs tests
+# passent sur Windows (cibles réelles : COM Task Scheduler, WebView2 présent sur
 # les runners). Le test e2e réel reste #[ignore] (lancé manuellement).
 name: CI
 
@@ -28,6 +28,11 @@ jobs:
           workspaces: |
             engine
             src-tauri
+
+      - name: Formatage (rustfmt)
+        run: |
+          cargo fmt --manifest-path engine/Cargo.toml --all -- --check
+          cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check
 
       - name: Tests du moteur (engine)
         working-directory: engine

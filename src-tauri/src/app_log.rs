@@ -60,7 +60,10 @@ fn purge_old_logs(dir: &PathBuf, days: u64) {
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_string();
-            if let Some(stamp) = name.strip_prefix("TaskSchdBackupRestore-").and_then(|n| n.strip_suffix(".log")) {
+            if let Some(stamp) = name
+                .strip_prefix("TaskSchdBackupRestore-")
+                .and_then(|n| n.strip_suffix(".log"))
+            {
                 if let Ok(date) = chrono::NaiveDate::parse_from_str(stamp, "%Y-%m-%d") {
                     let expires = cutoff.date_naive();
                     if date < expires {
@@ -227,10 +230,12 @@ mod tests {
         let (lines, _) = log.lines_after(0);
         assert!(lines.len() <= RING_CAPACITY, "l'anneau doit être borné");
         // Les lignes les plus récentes sont conservées.
-        assert!(lines.last().unwrap().message.contains("ligne 5000") || {
-            let n = RING_CAPACITY + 49;
-            lines.last().unwrap().message == format!("ligne {n}")
-        });
+        assert!(
+            lines.last().unwrap().message.contains("ligne 5000") || {
+                let n = RING_CAPACITY + 49;
+                lines.last().unwrap().message == format!("ligne {n}")
+            }
+        );
     }
 
     #[test]

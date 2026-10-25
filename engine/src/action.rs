@@ -19,7 +19,7 @@ use quick_xml::reader::Reader;
 use quick_xml::writer::Writer;
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, BackupError};
+use crate::error::{BackupError, Result};
 
 /// Surcharge des champs d'action d'une tache avant import.
 ///
@@ -48,9 +48,7 @@ pub struct ActionOverride {
 impl ActionOverride {
     /// Aucun champ a reecrire (surcharge vide : le XML reste inchange).
     pub fn is_empty(&self) -> bool {
-        Field::ALL
-            .iter()
-            .all(|f| override_for(self, *f).is_none())
+        Field::ALL.iter().all(|f| override_for(self, *f).is_none())
     }
 }
 
@@ -127,7 +125,10 @@ impl Field {
     /// (`<t:Command>`).
     fn from_name(name: &[u8]) -> Option<Field> {
         let local = local_name(name);
-        Field::ALL.iter().copied().find(|f| f.tag().as_bytes() == local)
+        Field::ALL
+            .iter()
+            .copied()
+            .find(|f| f.tag().as_bytes() == local)
     }
 }
 
@@ -166,7 +167,10 @@ fn invalid_xml(task: &str, reason: impl Into<String>) -> BackupError {
 /// Une etiquette de contenu ne contient que des espacements ?
 fn is_whitespace(text: &BytesText) -> bool {
     let bytes: &[u8] = text;
-    !bytes.is_empty() && bytes.iter().all(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
+    !bytes.is_empty()
+        && bytes
+            .iter()
+            .all(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'))
 }
 
 /// Balise fermante correspondant a une etiquette (nom local et eventuel
@@ -449,18 +453,20 @@ pub fn apply_action(xml: &str, task: &str, overrides: &ActionOverride) -> Result
                                 let end = paired_end(&name);
                                 writer
                                     .write_event(Event::Start(start_from_empty(&e)))
-                                    .map_err(|e| invalid_xml(task, format!("XML illisible: {e}")))?;
-                                writer
-                                    .write_event(Event::Text(BytesText::new(v)))
-                                    .map_err(|e| invalid_xml(task, format!("XML illisible: {e}")))?;
-                                writer
-                                    .write_event(Event::End(end))
-                                    .map_err(|e| invalid_xml(task, format!("XML illisible: {e}")))?;
+                                    .map_err(|e| {
+                                        invalid_xml(task, format!("XML illisible: {e}"))
+                                    })?;
+                                writer.write_event(Event::Text(BytesText::new(v))).map_err(
+                                    |e| invalid_xml(task, format!("XML illisible: {e}")),
+                                )?;
+                                writer.write_event(Event::End(end)).map_err(|e| {
+                                    invalid_xml(task, format!("XML illisible: {e}"))
+                                })?;
                             }
                             None => {
-                                writer
-                                    .write_event(Event::Empty(e))
-                                    .map_err(|e| invalid_xml(task, format!("XML illisible: {e}")))?;
+                                writer.write_event(Event::Empty(e)).map_err(|e| {
+                                    invalid_xml(task, format!("XML illisible: {e}"))
+                                })?;
                             }
                         }
                         continue;
@@ -610,9 +616,15 @@ mod tests {
     #[test]
     fn lit_les_champs_de_la_premiere_action() {
         let info = read_action(&sample(), TASK).unwrap();
-        assert_eq!(info.command.as_deref(), Some(r"C:\Program Files (x86)\Nightly\job.exe"));
+        assert_eq!(
+            info.command.as_deref(),
+            Some(r"C:\Program Files (x86)\Nightly\job.exe")
+        );
         assert_eq!(info.arguments.as_deref(), Some("--serveur SRV01 --verbose"));
-        assert_eq!(info.working_directory.as_deref(), Some(r"\\srv-fic\ComputerMonitoring"));
+        assert_eq!(
+            info.working_directory.as_deref(),
+            Some(r"\\srv-fic\ComputerMonitoring")
+        );
         assert_eq!(info.exec_count, 1);
     }
 
@@ -620,8 +632,15 @@ mod tests {
     fn compte_les_actions_exec_sans_compter_les_comhandler() {
         let xml = r#"<Task><Actions><ComHandler><Command>{clsid}</Command></ComHandler><Exec><Command>a.exe</Command></Exec><Exec><Command>b.exe</Command></Exec></Actions></Task>"#;
         let info = read_action(xml, TASK).unwrap();
-        assert_eq!(info.exec_count, 2, "le ComHandler n'est pas une action Exec");
-        assert_eq!(info.command.as_deref(), Some("a.exe"), "la premiere action Exec est lue");
+        assert_eq!(
+            info.exec_count, 2,
+            "le ComHandler n'est pas une action Exec"
+        );
+        assert_eq!(
+            info.command.as_deref(),
+            Some("a.exe"),
+            "la premiere action Exec est lue"
+        );
     }
 
     #[test]
@@ -636,7 +655,8 @@ mod tests {
 
     #[test]
     fn elements_vides_lus_comme_valeurs_vides() {
-        let xml = r#"<Task><Actions><Exec><Command></Command><Arguments /></Exec></Actions></Task>"#;
+        let xml =
+            r#"<Task><Actions><Exec><Command></Command><Arguments /></Exec></Actions></Task>"#;
         let info = read_action(xml, TASK).unwrap();
         assert_eq!(info.command.as_deref(), Some(""));
         assert_eq!(info.arguments.as_deref(), Some(""));
@@ -649,8 +669,12 @@ mod tests {
         let out = apply_action(&xml, TASK, &ActionOverride::default()).unwrap();
         assert_eq!(out, xml, "une surcharge vide rend le XML inchange");
         // Meme sans aucune action Exec, une surcharge vide reste inoffensive.
-        let com = r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
-        assert_eq!(apply_action(com, TASK, &ActionOverride::default()).unwrap(), com);
+        let com =
+            r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
+        assert_eq!(
+            apply_action(com, TASK, &ActionOverride::default()).unwrap(),
+            com
+        );
     }
 
     #[test]
@@ -709,7 +733,10 @@ mod tests {
       <WorkingDirectory>D:\Scripts</WorkingDirectory>
     </Exec>
   </Actions></Task>"#;
-        assert_eq!(out, expected, "l'element cree reprend l'indentation des enfants");
+        assert_eq!(
+            out, expected,
+            "l'element cree reprend l'indentation des enfants"
+        );
         parse_check(&out);
     }
 
@@ -752,11 +779,18 @@ mod tests {
             ..Default::default()
         };
         let out = apply_action(&xml, TASK, &overrides).unwrap();
-        assert!(!out.contains("a && b"), "le texte brut ne doit pas etre insere");
+        assert!(
+            !out.contains("a && b"),
+            "le texte brut ne doit pas etre insere"
+        );
         assert!(out.contains("&amp;&amp;"), "esperluettes echappees");
         parse_check(&out);
         let info = read_action(&out, TASK).unwrap();
-        assert_eq!(info.arguments.as_deref(), Some(value), "aller-retour sans perte");
+        assert_eq!(
+            info.arguments.as_deref(),
+            Some(value),
+            "aller-retour sans perte"
+        );
     }
 
     #[test]
@@ -793,7 +827,8 @@ mod tests {
 
     #[test]
     fn sans_action_exec_une_surcharge_active_erre() {
-        let xml = r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
+        let xml =
+            r#"<Task><Actions><ComHandler><Command>{c}</Command></ComHandler></Actions></Task>"#;
         let overrides = ActionOverride {
             command: Some("job.exe".to_string()),
             ..Default::default()
@@ -808,7 +843,8 @@ mod tests {
 
     #[test]
     fn tolerate_un_prefixe_xml_sur_les_etiquettes() {
-        let xml = r#"<Task><t:Actions><t:Exec><t:Command>old</t:Command></t:Exec></t:Actions></Task>"#;
+        let xml =
+            r#"<Task><t:Actions><t:Exec><t:Command>old</t:Command></t:Exec></t:Actions></Task>"#;
         let info = read_action(xml, TASK).unwrap();
         assert_eq!(info.exec_count, 1);
         assert_eq!(info.command.as_deref(), Some("old"));
