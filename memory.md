@@ -242,6 +242,14 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   donc sur le même commit), release GitHub « TaskSchdBackupRestore 1.2.0 » publiée avec
   le zip (4 921 025 octets) ; CI et Guide PDF verts sur `096a1db`.
 
+- **2026-10-25 (nettoyage)** — Historique Git resserré : releases et tags
+  **v1.0.0, v1.1.0, v1.1.1 et v1.1.2 supprimés** de GitHub **et** du clone local ; seul
+  **v1.2.0** subsiste (tag `096a1db`). Les entrées de dates ci-dessus qui décrivent ces
+  publications ne correspondent donc plus à des artefacts téléchargeables. Côté disque :
+  `cargo clean` des deux crates et suppression des anciens `release/tsbak-1.x-windows*`
+  (7,5 Go -> 86 Mo) ; `RELEASE-NOTES-*.md`, le livrable 1.2.0 et
+  `release/VALIDATION-INTERNE-hestia` (autre sujet) sont conservés.
+
 ## Décisions structurantes
 
 1. **Le CLI est le moteur** : `TaskSchdBackupRestore.exe` fonctionne sur **toutes** les versions de
