@@ -11,7 +11,7 @@ public class WinS {
   public struct RECT { public int L, T, R, B; }
 }
 "@
-$p = Get-Process TaskBackupRestore -ErrorAction Stop | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$p = Get-Process TaskSchdBackupRestoreGui -ErrorAction Stop | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $p) { Write-Error "application window not found"; exit 1 }
 $h = $p.MainWindowHandle
 [WinS]::ShowWindow($h, 9) | Out-Null

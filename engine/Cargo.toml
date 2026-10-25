@@ -1,16 +1,16 @@
 [package]
-name = "tsbak"
-version = "1.1.2"
+name = "taskschdbackuprestore"
+version = "1.2.0"
 edition = "2021"
 description = "Export/import des taches planifiees Windows (Task Scheduler) au format XML"
 license = "MIT"
 
 [lib]
-name = "tsbak"
+name = "taskschdbackuprestore"
 path = "src/lib.rs"
 
 [[bin]]
-name = "tsbak"
+name = "TaskSchdBackupRestore"
 path = "src/main.rs"
 
 [dependencies]

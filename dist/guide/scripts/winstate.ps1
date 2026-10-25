@@ -17,7 +17,7 @@ public class WinT {
   }
 }
 "@
-$p = Get-Process TaskBackupRestore -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$p = Get-Process TaskSchdBackupRestoreGui -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $p) { Write-Error "none"; exit 1 }
 $h = $p.MainWindowHandle
 $sb = New-Object System.Text.StringBuilder 256

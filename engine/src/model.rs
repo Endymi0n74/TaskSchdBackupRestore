@@ -66,7 +66,7 @@ pub struct Manifest {
 }
 
 impl Manifest {
-    /// Version courante du format de manifeste produite par cette version de tsbak.
+    /// Version courante du format de manifeste produite par cette version de TaskSchdBackupRestore.
     pub const CURRENT_VERSION: u32 = 1;
 
     /// Construit un nouveau manifeste, horodate a l'instant present.
@@ -160,6 +160,9 @@ pub struct ExecutionReport {
     pub blocked: Vec<(String, String)>,
     /// Taches dont l'ecriture a echoue, avec le message d'erreur (chemin, erreur).
     pub failed: Vec<(String, String)>,
+    /// Fichiers de sauvegarde ecrits avant un ecrasement (chemin du fichier) :
+    /// leur dossier est une archive reimportable (`TaskSchdBackupRestore import`).
+    pub backed_up: Vec<String>,
 }
 
 impl ExecutionReport {

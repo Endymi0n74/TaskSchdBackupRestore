@@ -19,7 +19,7 @@ use quick_xml::reader::Reader;
 use quick_xml::writer::Writer;
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Result, TsbakError};
+use crate::error::{Result, BackupError};
 
 /// Surcharge des champs d'action d'une tache avant import.
 ///
@@ -156,8 +156,8 @@ fn present(info: &ActionInfo, f: Field) -> bool {
 
 /// Erreur XML rattachee a une tache (jamais de chemin ni de valeur
 /// sensible dedans : uniquement le chemin de la tache et la raison).
-fn invalid_xml(task: &str, reason: impl Into<String>) -> TsbakError {
-    TsbakError::InvalidXml {
+fn invalid_xml(task: &str, reason: impl Into<String>) -> BackupError {
+    BackupError::InvalidXml {
         task: task.to_string(),
         reason: reason.into(),
     }
@@ -293,7 +293,7 @@ pub fn read_action(xml: &str, task: &str) -> Result<ActionInfo> {
 ///
 /// # Erreurs
 ///
-/// [`TsbakError::InvalidXml`] si le XML n'est pas analysable, ou si la
+/// [`BackupError::InvalidXml`] si le XML n'est pas analysable, ou si la
 /// tache ne contient aucune action `Exec` a editer.
 pub fn apply_action(xml: &str, task: &str, overrides: &ActionOverride) -> Result<String> {
     if overrides.is_empty() {

@@ -7,12 +7,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::io::IsTerminal;
 
-use crate::error::{Result, TsbakError};
+use crate::error::{Result, BackupError};
 
 /// Charge un fichier "user=password" (une entree par ligne, lignes vides et
 /// commentaires '#' ignores). Les cles sont normalisees en minuscules.
 pub fn load_password_file(path: &std::path::Path) -> Result<HashMap<String, String>> {
-    let content = std::fs::read_to_string(path).map_err(|e| TsbakError::Io {
+    let content = std::fs::read_to_string(path).map_err(|e| BackupError::Io {
         path: path.display().to_string(),
         source: e,
     })?;
@@ -91,7 +91,7 @@ impl PasswordResolver {
         }
         let prompt = format!("Mot de passe pour '{user}' (requis par la tache '{task_path}'), Entree pour ignorer cette tache: ");
         let pw = rpassword::prompt_password(prompt)
-            .map_err(|e| TsbakError::Other(format!("lecture du mot de passe: {e}")))?;
+            .map_err(|e| BackupError::Other(format!("lecture du mot de passe: {e}")))?;
         if pw.is_empty() {
             return Ok(None);
         }

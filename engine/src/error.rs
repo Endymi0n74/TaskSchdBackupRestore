@@ -1,12 +1,12 @@
-//! Erreurs de tsbak et traduction des codes HRESULT Windows en messages clairs.
+//! Erreurs de TaskSchdBackupRestore et traduction des codes HRESULT Windows en messages clairs.
 
 use thiserror::Error;
 
-/// Toutes les erreurs que peut renvoyer tsbak, qu'elles proviennent du
+/// Toutes les erreurs que peut renvoyer TaskSchdBackupRestore, qu'elles proviennent du
 /// systeme de fichiers, du manifeste, de la resolution des secrets ou du
 /// planificateur de taches lui-meme.
 #[derive(Debug, Error)]
-pub enum TsbakError {
+pub enum BackupError {
     /// Erreur d'entree/sortie sur un fichier ou dossier donne.
     #[error("Erreur d'entree/sortie sur {path}: {source}")]
     Io {
@@ -100,16 +100,16 @@ pub enum TsbakError {
     Other(String),
 }
 
-/// Alias de [`std::result::Result`] specialise pour les erreurs de tsbak.
-pub type Result<T> = std::result::Result<T, TsbakError>;
+/// Alias de [`std::result::Result`] specialise pour les erreurs de TaskSchdBackupRestore.
+pub type Result<T> = std::result::Result<T, BackupError>;
 
 /// Traduit un HRESULT COM du Task Scheduler en message d'erreur comprehensible.
 /// Les codes couverts sont ceux le plus frequemment rencontres avec
 /// ITaskFolder::RegisterTask / RegisterTaskDefinition.
-pub fn translate_hresult(operation: &str, hresult: u32) -> TsbakError {
+pub fn translate_hresult(operation: &str, hresult: u32) -> BackupError {
     let message = match hresult {
         0x80070005 => {
-            "Acces refuse. Relancez tsbak depuis une invite de commandes administrateur.".to_string()
+            "Acces refuse. Relancez TaskSchdBackupRestore depuis une invite de commandes administrateur.".to_string()
         }
         0x80070534 => "Aucun mappage entre le nom de compte et l'ID de securite n'a ete effectue (l'utilisateur cible n'existe pas ou n'est pas accessible)."
             .to_string(),
@@ -125,7 +125,7 @@ pub fn translate_hresult(operation: &str, hresult: u32) -> TsbakError {
         0x800704EC => "Ce programme est bloque par une strategie de groupe.".to_string(),
         other => format!("Code HRESULT non repertorie: {other:#010x}."),
     };
-    TsbakError::Scheduler {
+    BackupError::Scheduler {
         operation: operation.to_string(),
         hresult,
         message,

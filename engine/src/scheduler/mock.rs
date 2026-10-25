@@ -5,7 +5,7 @@
 use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap};
 
-use crate::error::{Result, TsbakError};
+use crate::error::{Result, BackupError};
 use crate::model::LogonType;
 use crate::scheduler::{TaskAuthInfo, TaskHandle, TaskSchedulerApi};
 
@@ -77,7 +77,7 @@ impl TaskSchedulerApi for MockScheduler {
             .borrow()
             .get(path)
             .map(|t| t.xml.clone())
-            .ok_or_else(|| TsbakError::Other(format!("tache introuvable: {path}")))
+            .ok_or_else(|| BackupError::Other(format!("tache introuvable: {path}")))
     }
 
     fn get_task_auth_info(&self, path: &str) -> Result<TaskAuthInfo> {
@@ -88,7 +88,7 @@ impl TaskSchedulerApi for MockScheduler {
                 user_id: t.user_id.clone(),
                 logon_type: t.logon_type,
             })
-            .ok_or_else(|| TsbakError::Other(format!("tache introuvable: {path}")))
+            .ok_or_else(|| BackupError::Other(format!("tache introuvable: {path}")))
     }
 
     fn task_exists(&self, path: &str) -> Result<bool> {
@@ -115,7 +115,7 @@ impl TaskSchedulerApi for MockScheduler {
         logon_type: LogonType,
     ) -> Result<()> {
         if !self.write_privileges {
-            return Err(TsbakError::AccessDenied {
+            return Err(BackupError::AccessDenied {
                 operation: format!("RegisterTask({path})"),
             });
         }

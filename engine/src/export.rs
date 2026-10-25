@@ -7,7 +7,7 @@
 use std::fs;
 use std::path::Path;
 
-use crate::error::{Result, TsbakError};
+use crate::error::{Result, BackupError};
 use crate::hash::sha256_hex;
 use crate::model::{Manifest, TaskRecord};
 use crate::scheduler::TaskSchedulerApi;
@@ -82,12 +82,26 @@ pub fn is_microsoft_task(path: &str) -> bool {
     path.to_lowercase().starts_with("\\microsoft\\")
 }
 
-fn sanitize_filename(task_path: &str) -> String {
-    // "\A\B\Task" -> "A__B__Task.xml" : on remplace le separateur pour
-    // obtenir un nom de fichier portable, sans collision (le manifeste
-    // conserve le chemin d'origine exact).
+/// Nom de fichier d'une tache, deduit de son chemin complet.
+///
+/// Le codage est **injectif** (deux chemins distincts ne peuvent pas donner
+/// le meme nom) : `\` devient `__` et un souligne litteral devient `_u` —
+/// deux codes de deux caracteres differant par le second, donc le decodage
+/// est unique (`\A\B` -> `A__B`, `\A_B` -> `A_uB`). Un chemin sans souligne
+/// garde exactement le nom des archives deja exportees
+/// (`\Backup\Nightly` -> `Backup__Nightly.xml`) ; les anciennes archives
+/// restent importables de toute facon, leur `manifest.json` enregistrant le
+/// nom reel de chaque fichier.
+pub(crate) fn sanitize_filename(task_path: &str) -> String {
     let trimmed = task_path.trim_start_matches('\\');
-    let mut name = trimmed.replace('\\', "__");
+    let mut name = String::with_capacity(trimmed.len());
+    for c in trimmed.chars() {
+        match c {
+            '\\' => name.push_str("__"),
+            '_' => name.push_str("_u"),
+            other => name.push(other),
+        }
+    }
     if name.is_empty() {
         name = "root".to_string();
     }
@@ -111,7 +125,7 @@ pub fn export(
     filter: &PatternFilter,
     source_host: &str,
 ) -> Result<ExportSummary> {
-    fs::create_dir_all(out_dir).map_err(|e| TsbakError::Io {
+    fs::create_dir_all(out_dir).map_err(|e| BackupError::Io {
         path: out_dir.display().to_string(),
         source: e,
     })?;
@@ -131,7 +145,7 @@ pub fn export(
 
         let filename = format!("{}.xml", sanitize_filename(&handle.path));
         let file_path = out_dir.join(&filename);
-        fs::write(&file_path, &xml).map_err(|e| TsbakError::Io {
+        fs::write(&file_path, &xml).map_err(|e| BackupError::Io {
             path: file_path.display().to_string(),
             source: e,
         })?;
@@ -149,8 +163,8 @@ pub fn export(
     let manifest = Manifest::new(source_host.to_string(), records);
     let manifest_path = out_dir.join("manifest.json");
     let manifest_json = serde_json::to_string_pretty(&manifest)
-        .map_err(|e| TsbakError::Other(format!("serialisation du manifeste: {e}")))?;
-    fs::write(&manifest_path, manifest_json).map_err(|e| TsbakError::Io {
+        .map_err(|e| BackupError::Other(format!("serialisation du manifeste: {e}")))?;
+    fs::write(&manifest_path, manifest_json).map_err(|e| BackupError::Io {
         path: manifest_path.display().to_string(),
         source: e,
     })?;
@@ -300,5 +314,80 @@ mod tests {
         assert!(filter.allows("\\Backup\\Nightly"));
         assert!(!filter.allows("\\Microsoft\\Windows\\Backup"));
         assert!(!filter.allows("\\Other\\Task"));
+    }
+
+    fn task(xml: &str) -> MockTask {
+        MockTask {
+            xml: xml.to_string(),
+            user_id: None,
+            logon_type: LogonType::None,
+        }
+    }
+
+    /// Regression : deux chemins de taches distincts ne doivent jamais
+    /// produire le meme nom de fichier. `\A__B\T` et `\A\B__T` donnaient
+    /// tous deux `A__B__T.xml` : un seul XML etait ecrit, le manifeste en
+    /// referencait deux, et `load_and_verify` rejetait **toute** l'archive
+    /// (empreinte SHA-256 incorrecte pour l'une des deux taches).
+    #[test]
+    fn deux_chemins_distincts_ne_partagent_pas_de_fichier() {
+        let scheduler = MockScheduler::new(true)
+            .with_task("\\A__B\\T", task("<Task>un</Task>"))
+            .with_task("\\A\\B__T", task("<Task>deux</Task>"))
+            .with_task("\\A_uB\\T", task("<Task>trois</Task>"))
+            .with_task("\\A_u\\B", task("<Task>quatre</Task>"))
+            .with_task("\\A\\B", task("<Task>cinq</Task>"));
+        let dir = tempdir().unwrap();
+        let filter = PatternFilter::new(vec![], vec![]);
+        let summary = export(&scheduler, dir.path(), true, &filter, "HOST").unwrap();
+        assert_eq!(summary.exported.len(), 5);
+
+        let mut names: Vec<String> = fs::read_dir(dir.path())
+            .unwrap()
+            .flatten()
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(
+            names.iter().filter(|n| n.ends_with(".xml")).count(),
+            5,
+            "5 XML distincts attendus, obtenu {names:?}"
+        );
+        assert_eq!(names.len(), 6, "5 XML + manifeste attendus, obtenu {names:?}");
+
+        // L'archive produite doit se recharger : chaque empreinte correspond
+        // bien au XML de sa propre tache (aucun fichier partage).
+        let (manifest, xmls) = crate::import::load_and_verify(dir.path())
+            .expect("l'archive exportee doit rester rechargeable");
+        assert_eq!(manifest.tasks.len(), 5);
+        for record in &manifest.tasks {
+            let xml = xmls
+                .get(&record.path)
+                .unwrap_or_else(|| panic!("XML absent pour {}", record.path));
+            assert_eq!(
+                sha256_hex(xml.as_bytes()),
+                record.sha256,
+                "empreinte incoherente pour {}",
+                record.path
+            );
+        }
+    }
+
+    /// Compatibilite descendante des noms : un chemin sans `_` produit
+    /// exactement le nom des archives deja exportees, donc les references
+    /// documentees (`\Backup\Nightly` -> `Backup__Nightly.xml`) restent
+    /// vraies et les archives existantes s'importent comme avant (leur
+    /// manifeste enregistre de toute facon le nom reel).
+    #[test]
+    fn nom_de_fichier_inchange_pour_un_chemin_sans_souligne() {
+        let scheduler = MockScheduler::new(true)
+            .with_task("\\Backup\\Nightly", task("<Task>n</Task>"));
+        let dir = tempdir().unwrap();
+        let filter = PatternFilter::new(vec![], vec![]);
+        export(&scheduler, dir.path(), true, &filter, "HOST").unwrap();
+        assert!(
+            dir.path().join("Backup__Nightly.xml").is_file(),
+            "le nom historique doit etre conserve"
+        );
     }
 }

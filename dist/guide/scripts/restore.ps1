@@ -8,7 +8,7 @@ public class WinR {
   public struct RECT { public int L, T, R, B; }
 }
 "@
-$p = Get-Process TaskBackupRestore -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$p = Get-Process TaskSchdBackupRestoreGui -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if (-not $p) { Write-Error "no application window"; exit 1 }
 $h = $p.MainWindowHandle
 [WinR]::ShowWindow($h, 9) | Out-Null   # SW_RESTORE

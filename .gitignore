@@ -1,7 +1,7 @@
 # --- Rust / build ---
 target/
 src-tauri/target/
-tsbak/target/
+engine/target/
 
 # --- Node / Tauri ---
 node_modules/

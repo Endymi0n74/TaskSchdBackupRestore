@@ -4,27 +4,27 @@ use std::io::IsTerminal;
 
 use clap::Parser;
 
-use tsbak::answers::{parse_user_map, AnswerFile};
-use tsbak::error::{Result, TsbakError};
-use tsbak::export::{export, is_microsoft_task, PatternFilter};
-use tsbak::import::{build_plan, execute_plan, load_and_verify, ImportOptions};
-use tsbak::model::ExecutionReport;
-use tsbak::password::{load_password_file, PasswordResolver};
-use tsbak::scheduler::TaskSchedulerApi;
-use tsbak::wizard::{Interactor, NullInteractor, TtyInteractor};
+use taskschdbackuprestore::answers::{parse_user_map, AnswerFile};
+use taskschdbackuprestore::error::{Result, BackupError};
+use taskschdbackuprestore::export::{export, is_microsoft_task, PatternFilter};
+use taskschdbackuprestore::import::{build_plan, execute_plan_with_undo, load_and_verify, ImportOptions};
+use taskschdbackuprestore::model::ExecutionReport;
+use taskschdbackuprestore::password::{load_password_file, PasswordResolver};
+use taskschdbackuprestore::scheduler::TaskSchedulerApi;
+use taskschdbackuprestore::wizard::{Interactor, NullInteractor, TtyInteractor};
 
 use cli::{Cli, Command};
 
 #[cfg(windows)]
 fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>> {
-    use tsbak::scheduler::windows_impl::WindowsScheduler;
+    use taskschdbackuprestore::scheduler::windows_impl::WindowsScheduler;
     Ok(Box::new(WindowsScheduler::connect()?))
 }
 
 #[cfg(not(windows))]
 fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>> {
-    Err(TsbakError::PlatformUnsupported(
-        "l'acces au Task Scheduler Windows necessite d'executer tsbak sur Windows".to_string(),
+    Err(BackupError::PlatformUnsupported(
+        "l'acces au Task Scheduler Windows necessite d'executer TaskSchdBackupRestore sur Windows".to_string(),
     ))
 }
 
@@ -53,6 +53,14 @@ fn print_report(report: &ExecutionReport, dry_run: bool) {
             println!("  - {path}: {reason}");
         }
     }
+    if let Some(dossier) = report.backed_up.first().and_then(|f| std::path::Path::new(f).parent()) {
+        println!(
+            "Sauvegardes ({}) : {} (dossier reimportable : TaskSchdBackupRestore import {})",
+            report.backed_up.len(),
+            dossier.display(),
+            dossier.display()
+        );
+    }
     if report.created.is_empty()
         && report.updated.is_empty()
         && report.skipped.is_empty()
@@ -65,18 +73,18 @@ fn print_report(report: &ExecutionReport, dry_run: bool) {
 
 fn run() -> Result<i32> {
     let cli = Cli::parse();
-    tsbak::log::init_logging();
+    taskschdbackuprestore::log::init_logging();
     let cmd_name = match &cli.command {
         Command::List { .. } => "list",
         Command::Export { .. } => "export",
         Command::Import { .. } => "import",
         Command::Validate { .. } => "validate",
     };
-    tsbak::log::info(format!(
-        "tsbak {} : commande {} sur {}",
+    taskschdbackuprestore::log::info(format!(
+        "TaskSchdBackupRestore {} : commande {} sur {}",
         env!("CARGO_PKG_VERSION"),
         cmd_name,
-        tsbak::local_host_name()
+        taskschdbackuprestore::local_host_name()
     ));
     match cli.command {
         Command::List { recursive, hide_microsoft } => {
@@ -113,8 +121,8 @@ fn run() -> Result<i32> {
                 exclude.push("\\Microsoft\\*".to_string());
             }
             let filter = PatternFilter::new(include, exclude);
-            tsbak::log::info(format!("Export vers {}", dir.display()));
-            let summary = export(scheduler.as_ref(), &dir, true, &filter, &tsbak::local_host_name())?;
+            taskschdbackuprestore::log::info(format!("Export vers {}", dir.display()));
+            let summary = export(scheduler.as_ref(), &dir, true, &filter, &taskschdbackuprestore::local_host_name())?;
             println!(
                 "{} tache(s) exportee(s) vers {}",
                 summary.exported.len(),
@@ -126,7 +134,7 @@ fn run() -> Result<i32> {
                     summary.skipped_by_filter.len()
                 );
             }
-            tsbak::log::info(format!(
+            taskschdbackuprestore::log::info(format!(
                 "Export termine : {} tache(s), {} ignoree(s) par filtre",
                 summary.exported.len(),
                 summary.skipped_by_filter.len()
@@ -145,10 +153,11 @@ fn run() -> Result<i32> {
             user_map,
             conflict_policy,
             folder,
+            undo_dir,
         } => {
             let is_tty = std::io::stdin().is_terminal();
             if interactive && !is_tty {
-                return Err(TsbakError::Other(
+                return Err(BackupError::Other(
                     "--interactive necessite un terminal interactif (aucun detecte)".to_string(),
                 ));
             }
@@ -203,7 +212,7 @@ fn run() -> Result<i32> {
             for item in &plan {
                 println!("{:<24} {}", item.action.label(), item.target_path);
             }
-            tsbak::log::info(format!("Plan d'import : {} tache(s)", plan.len()));
+            taskschdbackuprestore::log::info(format!("Plan d'import : {} tache(s)", plan.len()));
 
             let has_blocking = plan.iter().any(|p| p.action.is_blocking());
             if has_blocking && !is_tty && answers.is_none() {
@@ -213,9 +222,12 @@ fn run() -> Result<i32> {
                 );
             }
 
-            let report = execute_plan(scheduler.as_ref(), &plan, dry_run)?;
+            // Ecrasements reversibles : copie du XML actuel avant ecriture.
+            // Le dossier d'annulation est lui-meme une archive reimportable.
+            let undo = (!dry_run).then(|| undo_dir.unwrap_or_else(taskschdbackuprestore::import::default_undo_dir));
+            let report = execute_plan_with_undo(scheduler.as_ref(), &plan, dry_run, undo.as_deref())?;
             print_report(&report, dry_run);
-            tsbak::log::info(format!(
+            taskschdbackuprestore::log::info(format!(
                 "Import{} : {} creee(s), {} mise(s) a jour, {} ignoree(s), {} bloquee(s), {} echec(s)",
                 if dry_run { " (dry-run)" } else { "" },
                 report.created.len(),
@@ -235,7 +247,7 @@ fn run() -> Result<i32> {
                     manifest.exported_at,
                     manifest.source_host
                 );
-                tsbak::log::info(format!(
+                taskschdbackuprestore::log::info(format!(
                     "Archive valide : {} tache(s), source '{}'",
                     manifest.tasks.len(),
                     manifest.source_host
@@ -244,7 +256,7 @@ fn run() -> Result<i32> {
             }
             Err(e) => {
                 eprintln!("Archive invalide : {e}");
-                tsbak::log::error(format!("Archive invalide : {e}"));
+                taskschdbackuprestore::log::error(format!("Archive invalide : {e}"));
                 Ok(2)
             }
         },
@@ -256,7 +268,7 @@ fn main() {
         Ok(code) => std::process::exit(code),
         Err(e) => {
             eprintln!("Erreur: {e}");
-            tsbak::log::error(format!("{e}"));
+            taskschdbackuprestore::log::error(format!("{e}"));
             std::process::exit(2);
         }
     }

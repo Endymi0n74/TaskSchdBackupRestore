@@ -1,17 +1,17 @@
 ============================================================
- Task backup and restore - Export / Import des taches
+ TaskSchdBackupRestore - Export / Import des taches
  planifiees Windows
  Compatible : Windows Server 2008 R2, 2012, 2012 R2, 2016,
               2019, 2022, 2025, Windows 10 et 11.
 ============================================================
 
 CONTENU DU DOSSIER
-  - TaskBackupRestore.exe : interface graphique (Windows 10/11 et
+  - TaskSchdBackupRestoreGui.exe : interface graphique (Windows 10/11 et
     Windows Server 2016 et plus). Exige le composant WebView2
     (preinstalle sur ces systemes). Export/import avec
     interface, archives .zip (option chiffrement AES-256)
     et journaux consultables.
-  - Guide-tsbak.pdf : guide d'utilisation illustre (captures
+  - Guide-TaskSchdBackupRestore.pdf : guide d'utilisation illustre (captures
     d'ecran + explications pas a pas) couvrant l'interface
     graphique, la ligne de commande et les assistants .cmd
     (section dediee aux serveurs 2008 R2 / 2012).
@@ -19,7 +19,7 @@ CONTENU DU DOSSIER
     d'inclusion/exclusion (motifs simples *).
   - guide\        : sources du guide (HTML + captures + scripts de
     demonstration).
-  - tsbak.exe     : version ligne de commande (TOUTES les
+  - TaskSchdBackupRestore.exe     : version ligne de commande (TOUTES les
     versions de Windows Server de 2008 R2 a 2025). Meme
     moteur, journaux inclus.
   - export.cmd    : assistant d'export (ligne de commande).
@@ -29,15 +29,15 @@ CONTENU DU DOSSIER
 EXPORT - machine source
   Double-clic sur export.cmd (de preference en administrateur),
   ou en ligne de commande :
-      tsbak.exe export C:\tsbak\export-2026-01-01
+      TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01
   Le dossier cree contient les XML bruts + manifest.json
   (avec empreintes SHA-256). Copiez-le sur la machine cible.
 
 IMPORT - machine cible
   Double-clic sur import.cmd EN ADMINISTRATEUR (clic droit >
   Executer en tant qu'administrateur), ou en ligne de commande :
-      tsbak.exe import C:\tsbak\export-2026-01-01 --dry-run
-      tsbak.exe import C:\tsbak\export-2026-01-01
+      TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dry-run
+      TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
   Options utiles :
       --folder \Restauration-2026
             restaure chaque tache sous ce dossier du planificateur
@@ -50,5 +50,5 @@ IMPORT - machine cible
 
 JOURNAUX
   Chaque commande ecrit un journal horodate dans :
-      %LOCALAPPDATA%\tsbak\logs\tsbak-AAAA-MM-JJ.log
+      %LOCALAPPDATA%\TaskSchdBackupRestore\logs\TaskSchdBackupRestore-AAAA-MM-JJ.log
   (retenu 14 jours). Les mots de passe n'y figurent jamais.

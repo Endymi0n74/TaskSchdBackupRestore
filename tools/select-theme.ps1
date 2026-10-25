@@ -1,5 +1,5 @@
 # ============================================================
-#  select-theme.ps1 - bascule du theme de l'interface tsbak
+#  select-theme.ps1 - bascule du theme de l'interface TaskSchdBackupRestore
 #
 #  ui/index.html charge deux feuillets de palette :
 #    ui/themes/legacy.css   theme publie (palette historique)

@@ -13,7 +13,7 @@ on:
 
 jobs:
   test:
-    name: Tests (tsbak + interface)
+    name: Tests (TaskSchdBackupRestore + interface)
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -26,11 +26,11 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            tsbak
+            engine
             src-tauri
 
-      - name: Tests du moteur (tsbak)
-        working-directory: tsbak
+      - name: Tests du moteur (engine)
+        working-directory: engine
         run: cargo test --locked
 
       - name: Tests de l'interface (src-tauri)

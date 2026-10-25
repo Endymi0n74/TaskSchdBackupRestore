@@ -77,7 +77,7 @@ function Bring-Front([IntPtr]$hwnd) {
   return $false
 }
 
-$tag = "TSBAK-CAP-" + $PID + "-" + (Get-Random)
+$tag = "TSCBR-CAP-" + $PID + "-" + (Get-Random)
 $full = ("title {0} & mode con: cols={1} lines={2} & " -f $tag, $Cols, $Lines) + $Inner
 $spArgs = @{ FilePath = "conhost.exe"; ArgumentList = @("cmd.exe", "/k", $full); PassThru = $true }
 if ($WorkDir -ne "") { $spArgs.WorkingDirectory = $WorkDir }

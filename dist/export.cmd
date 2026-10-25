@@ -1,19 +1,19 @@
 @echo off
 rem ============================================================
-rem  tsbak - EXPORT des taches planifiees Windows
+rem  TaskSchdBackupRestore - EXPORT des taches planifiees Windows
 rem  Compatible : Windows Server 2008 R2 a 2025+.
 rem  Conseil : clic droit > "Executer en tant qu'administrateur"
 rem  pour exporter aussi les taches des autres comptes.
 rem ============================================================
 setlocal
-set "BIN=%~dp0tsbak.exe"
+set "BIN=%~dp0TaskSchdBackupRestore.exe"
 if not exist "%BIN%" (
-  echo ERREUR: tsbak.exe doit se trouver dans le meme dossier que ce script.
+  echo ERREUR: TaskSchdBackupRestore.exe doit se trouver dans le meme dossier que ce script.
   pause
   exit /b 2
 )
 
-set /p "DEST=Dossier d'export (ex: C:\tsbak\export-2026-01-01) : "
+set /p "DEST=Dossier d'export (ex: C:\TaskSchdBackupRestore\export-2026-01-01) : "
 if "%DEST%"=="" ( echo Aucun dossier fourni. & pause & exit /b 2 )
 if not exist "%DEST%" mkdir "%DEST%"
 if not exist "%~dp0logs" mkdir "%~dp0logs"

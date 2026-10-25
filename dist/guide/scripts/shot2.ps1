@@ -14,7 +14,7 @@ public class WinP {
   public struct RECT { public int L, T, R, B; }
 }
 "@
-$p = Get-Process TaskBackupRestore -ErrorAction Stop | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$p = Get-Process TaskSchdBackupRestoreGui -ErrorAction Stop | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 $h = $p.MainWindowHandle
 
 $list = New-Object System.Collections.ArrayList

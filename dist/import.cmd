@@ -1,14 +1,14 @@
 @echo off
 rem ============================================================
-rem  tsbak - IMPORT (restauration) des taches planifiees Windows
+rem  TaskSchdBackupRestore - IMPORT (restauration) des taches planifiees Windows
 rem  Compatible : Windows Server 2008 R2 a 2025+.
 rem  IMPORTANT : ce script doit tourner EN ADMINISTRATEUR
 rem  (clic droit > "Executer en tant qu'administrateur").
 rem ============================================================
 setlocal
-set "BIN=%~dp0tsbak.exe"
+set "BIN=%~dp0TaskSchdBackupRestore.exe"
 if not exist "%BIN%" (
-  echo ERREUR: tsbak.exe doit se trouver dans le meme dossier que ce script.
+  echo ERREUR: TaskSchdBackupRestore.exe doit se trouver dans le meme dossier que ce script.
   pause
   exit /b 2
 )

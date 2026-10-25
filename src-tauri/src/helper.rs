@@ -5,7 +5,7 @@
 //! Deux moitiés, dans le même exécutable :
 //! - **Mode helper** (`--helper-import` : détecté dans `main.rs` avant le
 //!   démarrage de Tauri) : exécute l'import réel sans fenêtre, journalise
-//!   dans le même dossier de logs (`%LOCALAPPDATA%\tsbak\logs\`), écrit un
+//!   dans le même dossier de logs (`%LOCALAPPDATA%\TaskSchdBackupRestore\logs\`), écrit un
 //!   fichier de **résultat JSON** puis supprime le fichier de réponses.
 //! - **Côté interface** ([`run_elevated_import`]) : écrit le fichier de
 //!   réponses temporaire (décisions + mots de passe en mémoire), lance le
@@ -14,7 +14,7 @@
 //!   temporaires.
 //!
 //! Sécurité : le fichier de réponses contient brièvement les mots de passe
-//! sur disque (dans `%TEMP%\task-backup-restore`, ACL utilisateur uniquement) — c'est
+//! sur disque (dans `%TEMP%\TaskSchdBackupRestore`, ACL utilisateur uniquement) — c'est
 //! la seule façon de transférer des secrets à un processus élevé séparé. Il
 //! est supprimé par le helper **et** par l'interface, dans tous les chemins
 //! (y compris les erreurs), et **aucun** mot de passe n'est jamais journalisé
@@ -27,11 +27,11 @@ use std::time::{Duration, SystemTime};
 
 use serde::{Deserialize, Serialize};
 
-use tsbak::answers::AnswerFile;
-use tsbak::import::{build_plan, execute_plan, load_and_verify, ImportOptions};
-use tsbak::password::PasswordResolver;
-use tsbak::scheduler::TaskSchedulerApi;
-use tsbak::wizard::NullInteractor;
+use taskschdbackuprestore::answers::AnswerFile;
+use taskschdbackuprestore::import::{build_plan, execute_plan_with_undo, load_and_verify, ImportOptions};
+use taskschdbackuprestore::password::PasswordResolver;
+use taskschdbackuprestore::scheduler::TaskSchedulerApi;
+use taskschdbackuprestore::wizard::NullInteractor;
 
 use crate::app_log::AppLog;
 use crate::commands::{self, ImportDecisions, ReportView};
@@ -41,7 +41,7 @@ pub const HELPER_FLAG: &str = "--helper-import";
 
 /// Dossier de travail temporaire (fichiers de réponses et de résultat).
 fn temp_work_dir() -> PathBuf {
-    std::env::temp_dir().join("task-backup-restore")
+    std::env::temp_dir().join("TaskSchdBackupRestore")
 }
 
 /// Suffixe unique (pid + horodatage nanoseconde) pour les fichiers temporaires.
@@ -204,7 +204,9 @@ pub(crate) fn helper_import_with(
     let verb = if dry_run { "Simulation d'import (helper)" } else { "Import (helper)" };
     log.info(&format!("{verb} depuis {} ({} tâche(s))", dir.display(), plan.len()));
 
-    let report = execute_plan(scheduler, &plan, dry_run).map_err(|e| e.to_string())?;
+    let undo = (!dry_run).then(taskschdbackuprestore::import::default_undo_dir);
+    let report = execute_plan_with_undo(scheduler, &plan, dry_run, undo.as_deref())
+        .map_err(|e| e.to_string())?;
 
     // Étapes puis synthèse : même journalisation que la commande
     // `import_execute` (partagée dans `commands`), aucun secret dedans.
@@ -256,15 +258,7 @@ pub fn run_elevated_import(
     }
 
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    let folder_arg = target_folder
-        .map(|f| format!(" --folder {}", quote_arg(f)))
-        .unwrap_or_default();
-    let params = format!(
-        "{HELPER_FLAG} --dir {} --answers {} --result {}{folder_arg}",
-        quote_arg(dir),
-        quote_arg(&answers_path.to_string_lossy()),
-        quote_arg(&result_path.to_string_lossy())
-    );
+    let params = elevated_params(Path::new(dir), &answers_path, &result_path, target_folder);
 
     let spawn = spawn_elevated_and_wait(&exe, &params);
     if let Err(e) = spawn {
@@ -297,10 +291,73 @@ pub fn run_elevated_import(
         .ok_or_else(|| "le processus administrateur n'a pas produit de rapport".to_string())
 }
 
-/// Échappe un argument pour la ligne de commande Windows (les guillemets
-/// dans les chemins sont pathologiques et retirés).
-fn quote_arg(s: &str) -> String {
-    format!("\"{}\"", s.replace('"', ""))
+/// Construit la ligne d'arguments transmise au processus enfant élevé, telle
+/// que `ShellExecuteExW` la reçoit en `lpParameters` (le programme lui-même
+/// est passé à part, dans `lpFile`).
+///
+/// Isolée (et publique) pour que les tests puissent vérifier la **vraie**
+/// ligne produite, découpée par le vrai splitter de Windows, et pas seulement
+/// `quote_arg` toute seule.
+pub fn elevated_params(
+    dir: &Path,
+    answers_path: &Path,
+    result_path: &Path,
+    target_folder: Option<&str>,
+) -> String {
+    let mut params = format!(
+        "{HELPER_FLAG} --dir {} --answers {} --result {}",
+        quote_arg(&dir.to_string_lossy()),
+        quote_arg(&answers_path.to_string_lossy()),
+        quote_arg(&result_path.to_string_lossy())
+    );
+    if let Some(folder) = target_folder {
+        params.push_str(&format!(" --folder {}", quote_arg(folder)));
+    }
+    params
+}
+
+/// Encadre un argument de la ligne de commande Windows selon les règles du
+/// splitter standard (`CommandLineToArgvW`, celles qu'utilise le processus
+/// enfant pour remplir `std::env::args()`), de sorte qu'un chemin arbitraire
+/// — antislash final, guillemets, espaces — soit relu **à l'identique**.
+///
+/// Sans espace, tabulation, saut de ligne ni guillemet, l'argument est rendu
+/// tel quel (un antislash final n'y précède aucun guillemet, donc sans
+/// effet) ; sinon il est encadré, une suite de `n` antislashs devient `2n`
+/// devant la fermeture et `2n+1` devant un guillemet littéral, qui est alors
+/// échappé. `""` transmet l'argument vide.
+fn quote_arg(arg: &str) -> String {
+    let needs_quotes = arg.is_empty()
+        || arg
+            .chars()
+            .any(|c| matches!(c, ' ' | '\t' | '\n' | '\r' | '\u{b}' | '"'));
+    if !needs_quotes {
+        return arg.to_string();
+    }
+
+    let mut out = String::with_capacity(arg.len() + 2);
+    out.push('"');
+    let mut backslashes = 0usize;
+    for c in arg.chars() {
+        match c {
+            '\\' => backslashes += 1,
+            '"' => {
+                out.push_str(&"\\".repeat(backslashes * 2 + 1));
+                out.push('"');
+                backslashes = 0;
+            }
+            other => {
+                out.push_str(&"\\".repeat(backslashes));
+                backslashes = 0;
+                out.push(other);
+            }
+        }
+    }
+    // Les antislashs finaux doivent être doublés pour ne pas échapper le
+    // guillemet de fermeture.
+    out.push_str(&"\\".repeat(backslashes * 2));
+    out.push('"');
+    out
 }
 
 fn write_json<T: Serialize>(path: &Path, value: &T) -> std::io::Result<()> {
@@ -363,10 +420,10 @@ mod tests {
     use super::*;
     use crate::app_log::AppLog;
     use std::collections::HashMap;
-    use tsbak::answers::ConflictDecision;
-    use tsbak::export::{export, PatternFilter};
-    use tsbak::model::LogonType;
-    use tsbak::scheduler::mock::{MockScheduler, MockTask};
+    use taskschdbackuprestore::answers::ConflictDecision;
+    use taskschdbackuprestore::export::{export, PatternFilter};
+    use taskschdbackuprestore::model::LogonType;
+    use taskschdbackuprestore::scheduler::mock::{MockScheduler, MockTask};
 
     fn source_scheduler() -> MockScheduler {
         MockScheduler::new(true)
@@ -481,7 +538,7 @@ mod tests {
         decisions.skip_tasks.push("\\SkipMe".to_string());
         decisions.action_overrides.insert(
             "\\Backup\\Nightly".to_string(),
-            tsbak::action::ActionOverride {
+            taskschdbackuprestore::action::ActionOverride {
                 command: Some("D:\\Scripts\\a.exe".to_string()),
                 working_directory: Some("D:\\Scripts".to_string()),
                 arguments: None,
@@ -530,7 +587,7 @@ mod tests {
         answers.passwords.insert("DOMAIN\\alice".to_string(), "s3cret".to_string());
         answers.action_overrides.insert(
             "\\Backup\\Nightly".to_string(),
-            tsbak::action::ActionOverride {
+            taskschdbackuprestore::action::ActionOverride {
                 command: Some("D:\\Scripts\\a.exe".to_string()),
                 ..Default::default()
             },
@@ -559,6 +616,7 @@ mod tests {
                 skipped: vec![],
                 blocked: vec![],
                 failed: vec![],
+                backed_up: vec![],
                 exit_code: 0,
             }),
         };
@@ -570,10 +628,98 @@ mod tests {
         assert_eq!(parsed.report.unwrap().created, vec!["\\A".to_string()]);
     }
 
+    /// Decoupe une ligne de commande avec le **vrai** splitter de Windows
+    /// (`CommandLineToArgvW`), celui qui remplit `std::env::args()` du
+    /// processus enfant : c'est lui qui derape quand les guillemets sont mal
+    /// poses, pas une reimplementation de test.
+    #[cfg(windows)]
+    fn split_command_line(cmdline: &str) -> Vec<String> {
+        use windows::core::PCWSTR;
+        use windows::Win32::UI::Shell::CommandLineToArgvW;
+
+        let wide: Vec<u16> = cmdline.encode_utf16().chain(std::iter::once(0)).collect();
+        let mut argc = 0i32;
+        let argv = unsafe { CommandLineToArgvW(PCWSTR(wide.as_ptr()), &mut argc) };
+        assert!(!argv.is_null(), "CommandLineToArgvW a echoue");
+        let mut args = Vec::with_capacity(argc as usize);
+        unsafe {
+            for i in 0..argc as isize {
+                args.push(
+                    (*argv.offset(i))
+                        .to_string()
+                        .expect("argument UTF-16 valide"),
+                );
+            }
+            // `CommandLineToArgvW` alloue le tableau avec `LocalAlloc` : on le
+            // libere pour ne pas laisser de fuite dans le processus de test.
+            let _ = windows::Win32::Foundation::LocalFree(windows::Win32::Foundation::HLOCAL(
+                argv as *mut core::ffi::c_void,
+            ));
+        }
+        args
+    }
+
+    /// Regression : la ligne de commande du processus eleve doit se relire a
+    /// l'identique quel que soit le chemin. Avec l'ancien `quote_arg`, un
+    /// dossier finissant par `\` (`C:\exemple\export\`) produisait
+    /// `--dir "C:\exemple\export\"` : l'antislash echappait le guillemet
+    /// fermant, `--answers`, `--result` et `--folder` etaient avales ou
+    /// decales, et le helper eleve recevait un chemin tronque.
+    ///
+    /// Le test construit la **vraie** ligne (celle que `run_elevated_import`
+    /// passe a `ShellExecuteExW`) et la fait decouper par le **vrai** splitter
+    /// de Windows.
+    #[cfg(windows)]
     #[test]
-    fn quote_arg_handles_paths() {
-        assert_eq!(quote_arg(r"C:\Users\a b\dump"), "\"C:\\Users\\a b\\dump\"");
-        assert_eq!(quote_arg("x\"y"), "\"xy\"");
+    fn ligne_de_commande_elevee_se_relit_a_l_identique() {
+        let exe = r"C:\Program Files\TaskSchdBackupRestore\TaskSchdBackupRestoreGui.exe";
+        let answers =
+            r"C:\Users\Stephane\AppData\Local\Temp\TaskSchdBackupRestore\answers-4242-7.json";
+        let result =
+            r"C:\Users\Stephane\AppData\Local\Temp\TaskSchdBackupRestore\result-4242-7.json";
+
+        let cas: [(&str, Option<&str>); 6] = [
+            // Antislash final : le cas qui decalait tout le decoupage.
+            (r"C:\exemple\export\", None),
+            // Espaces + antislash final.
+            (r"C:\Mes Documents\export 2026\", None),
+            // Guillemets et espaces, plus un dossier cible a antislash final.
+            (r#"C:\dossier "guillemets"\"#, Some(r"\Restauration 2026\")),
+            // Chemin UNC avec dossier cible.
+            (r"\\serveur\partage\nom\", Some(r"\Restore-2026\")),
+            // Dossier cible vide (transmis tel quel, sans effet cote moteur).
+            (r"C:\simple\", Some("")),
+            // Cas sans aucun caractere special : argument rendu nu.
+            (r"C:\simple", None),
+        ];
+
+        for (dir, folder) in cas {
+            let params = elevated_params(
+                Path::new(dir),
+                Path::new(answers),
+                Path::new(result),
+                folder,
+            );
+            let cmdline = format!("{} {}", quote_arg(exe), params);
+            let argv = split_command_line(&cmdline);
+
+            let mut attendu: Vec<&str> = vec![
+                HELPER_FLAG,
+                "--dir",
+                dir,
+                "--answers",
+                answers,
+                "--result",
+                result,
+            ];
+            if let Some(f) = folder {
+                attendu.push("--folder");
+                attendu.push(f);
+            }
+            // `argv[0]` est le programme, passe a part a `ShellExecuteExW`
+            // (`lpFile`) ; on verifie donc les arguments a partir de 1.
+            assert_eq!(&argv[1..], &attendu[..], "ligne construite : {cmdline}");
+        }
     }
 
     #[test]

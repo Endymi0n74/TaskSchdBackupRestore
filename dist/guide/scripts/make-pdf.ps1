@@ -1,7 +1,7 @@
 # Genere un PDF a partir d'un fichier HTML avec Edge headless.
 # Usage :
 #   powershell -NoProfile -ExecutionPolicy Bypass -File make-pdf.ps1 `
-#       -Html "dist/guide/guide.html" -Pdf "dist/Guide-tsbak.pdf"
+#       -Html "dist/guide/guide.html" -Pdf "dist/Guide-TaskSchdBackupRestore.pdf"
 #
 # Edge headless imprime le HTML tel qu'un navigateur le rend (CSS @page
 # respectee : A4, marges 13mm/12mm). Aucune installation supplementaire.

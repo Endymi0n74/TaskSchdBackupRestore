@@ -1,4 +1,4 @@
-# tsbak
+# TaskSchdBackupRestore
 
 CLI Rust pour exporter/reimporter les taches planifiees Windows (Task
 Scheduler), en XML brut, pour migration entre machines ou restauration.
@@ -16,7 +16,7 @@ cargo build --release
 cargo test
 ```
 
-Sur Windows, `cargo build --release` produit un `tsbak.exe` fonctionnel
+Sur Windows, `cargo build --release` produit un `TaskSchdBackupRestore.exe` fonctionnel
 utilisant reellement `ITaskService`/`ITaskFolder`/`IRegisteredTask`. Sur les
 autres plateformes, seules les commandes ne necessitant pas d'acces au
 planificateur (`validate`) fonctionnent ; `list`/`export`/`import`
@@ -126,22 +126,22 @@ NEWPC\bob=motdepasse2
 ## Journalisation
 
 Chaque commande ecrit un journal horodate dans
-`%LOCALAPPDATA%\tsbak\logs\tsbak-AAAA-MM-JJ.log` (le **meme dossier** que
-l'interface graphique Task backup and restore), avec une retention de 14 jours. La
+`%LOCALAPPDATA%\TaskSchdBackupRestore\logs\TaskSchdBackupRestore-AAAA-MM-JJ.log` (le **meme dossier** que
+l'interface graphique TaskSchdBackupRestore), avec une retention de 14 jours. La
 journalisation est best-effort : elle ne fait jamais echouer la commande.
-Les mots de passe n'y figurent jamais. `TSBAK_LOG_DIR` permet de derouter le
+Les mots de passe n'y figurent jamais. `TASKSCHDBACKUPRESTORE_LOG_DIR` permet de derouter le
 dossier de journaux (utilise par les tests).
 
 ## Compatibilite Windows
 
-- **CLI (`tsbak.exe`)** : Windows Server **2008 R2 a 2025+**, Windows 10/11.
+- **CLI (`TaskSchdBackupRestore.exe`)** : Windows Server **2008 R2 a 2025+**, Windows 10/11.
   Aucune dependance runtime : seul le COM Task Scheduler (present depuis
   Vista) et des API Win32 anciennes sont utilises. Note honnete : le
   compilateur Rust (>= 1.76) declare officiellement Windows 10 comme socle
   minimum ; ce binaire n'utilise toutefois que des API existantes depuis
   Vista/7 et fonctionne en pratique sur 2008 R2 — a valider sur une vraie
   machine avant deploiement massif.
-- **GUI (`TaskBackupRestore.exe`)** : Windows 10/11 et Windows Server 2016 et plus,
+- **GUI (`TaskSchdBackupRestoreGui.exe`)** : Windows 10/11 et Windows Server 2016 et plus,
   car elle repose sur WebView2, dont Microsoft a cesse les mises a jour sur
   Windows 7/Server 2008 R2 et 2012 (fige en version 109, non patchee depuis
   octobre 2023).
@@ -150,20 +150,20 @@ dossier de journaux (utilise par les tests).
 
 ```bash
 # Liste des taches (recursif)
-tsbak.exe list --recursive
+TaskSchdBackupRestore.exe list --recursive
 
 # Liste sans les taches systeme \Microsoft\
-tsbak.exe list --hide-microsoft
+TaskSchdBackupRestore.exe list --hide-microsoft
 
 # Export de toutes les taches
-tsbak.exe export C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01
 
 # Export sans les taches systeme \Microsoft\ (comme l'interface)
-tsbak.exe export C:\tsbak\export-2026-01-01 --hide-microsoft
+TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01 --hide-microsoft
 
 # Export avec motifs d'inclusion/exclusion
 # (--hide-microsoft equivaut a ajouter --exclude "\Microsoft\*")
-tsbak.exe export C:\tsbak\export-2026-01-01 --include "\Backup\*" --exclude "\Microsoft\*"
+TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01 --include "\Backup\*" --exclude "\Microsoft\*"
 ```
 
 ## Import pas a pas (CLI)
@@ -173,13 +173,13 @@ qu'administrateur) :
 
 ```bash
 # 1. Verifier l'archive copiee (integrite + empreintes SHA-256)
-tsbak.exe validate C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe validate C:\TaskSchdBackupRestore\export-2026-01-01
 
 # 2. Simuler l'import (rien n'est ecrit — recommandé avant tout import reel)
-tsbak.exe import C:\tsbak\export-2026-01-01 --dry-run
+TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dry-run
 
 # 3. Import reel
-tsbak.exe import C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ```
 
 Options frequentes :
