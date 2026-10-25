@@ -1,18 +1,18 @@
-# Task Backup and Restore — tsbak
+# TaskSchdBackupRestore — sauvegarde et restauration des tâches planifiées Windows
 
 **🇫🇷 Français** · [🇬🇧 English](README.en.md)
 
-[![CI](https://github.com/Endymi0n74/Task-Backup-and-Restore/actions/workflows/ci.yml/badge.svg)](https://github.com/Endymi0n74/Task-Backup-and-Restore/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/Endymi0n74/Task-Backup-and-Restore?label=release)](https://github.com/Endymi0n74/Task-Backup-and-Restore/releases)
+[![CI](https://github.com/Endymi0n74/TaskSchdBackupRestore/actions/workflows/ci.yml/badge.svg)](https://github.com/Endymi0n74/TaskSchdBackupRestore/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Endymi0n74/TaskSchdBackupRestore?label=release)](https://github.com/Endymi0n74/TaskSchdBackupRestore/releases)
 [![Licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
 
 Sauvegarde et restauration des **tâches planifiées Windows** (Task Scheduler) en **XML brut**,
 avec interface graphique **et** ligne de commande partageant le **même moteur**, la même
 vérification d'intégrité et les mêmes journaux.
 
-- `TaskBackupRestore.exe` — interface graphique (Tauri 2), Windows 10/11 et Server 2016+.
-- `tsbak.exe` — ligne de commande, **Windows Server 2008 R2 → 2025+**, aucune dépendance runtime.
-- Guides et assistants inclus : voir [📖 Guide PDF](dist/Guide-tsbak.pdf), [📄 Mémo filtres (PDF)](dist/Memo-motifs.pdf), [📋 MIGRATION.md](MIGRATION.md) (2008 R2 → 2022) et `dist/*.cmd`.
+- `TaskSchdBackupRestoreGui.exe` — interface graphique (Tauri 2), Windows 10/11 et Server 2016+.
+- `TaskSchdBackupRestore.exe` — ligne de commande, **Windows Server 2008 R2 → 2025+**, aucune dépendance runtime.
+- Guides et assistants inclus : voir [📖 Guide PDF](dist/Guide-TaskSchdBackupRestore.pdf), [📄 Mémo filtres (PDF)](dist/Memo-motifs.pdf), [📋 MIGRATION.md](MIGRATION.md) (2008 R2 → 2022) et `dist/*.cmd`.
 
 ---
 
@@ -22,7 +22,7 @@ vérification d'intégrité et les mêmes journaux.
   d'inclusion/exclusion (motifs simples `*`), export vers un dossier (XML + `manifest.json`).
   Les tâches système `\Microsoft\` sont **masquées par défaut** dans l'interface (une case à
   cocher permet de les afficher) — elles restent exportables si vous les affichez. En CLI,
-  `tsbak list --hide-microsoft` et `tsbak export --hide-microsoft` les excluent.
+  `TaskSchdBackupRestore list --hide-microsoft` et `TaskSchdBackupRestore export --hide-microsoft` les excluent.
 - **Archive `.zip` optionnelle**, **chiffrable AES-256** (variante WinZip AES, lisible par
   7-Zip/WinZip). Les fichiers d'export sont d'abord écrits dans un dossier temporaire puis
   compressés : le dossier choisi ne reçoit **que** le fichier `.zip`, jamais les XML ni le
@@ -36,19 +36,25 @@ vérification d'intégrité et les mêmes journaux.
   **édition des actions avant restauration** — *Programme/script*, *Ajouter des arguments*,
   *Commencer dans* modifiables tâche par tâche (chemins propres à la machine source :
   lettres de lecteur, partages UNC), **simulation (dry-run)** puis import réel.
+- **Écrasement réversible** : avant de remplacer une tâche existante, son XML **actuel** est
+  copié dans `%LOCALAPPDATA%\TaskSchdBackupRestore\undo\<horodatage>` (ou `--undo-dir`), dossier qui est une
+  archive réimportable (`TaskSchdBackupRestore import <dossier>`) — la définition écrasée n'est jamais perdue.
+  Si la copie échoue, la tâche n'est **pas** écrasée.
 - **Élévation sans redémarrage** : l'import réel s'exécute dans un **processus enfant élevé**
   temporaire (invite UAC), l'interface reste ouverte et affiche le rapport à la fin.
-- **Journalisation** : logs horodatés dans `%LOCALAPPDATA%\tsbak\logs\` (rétention 14 jours),
+- **Journalisation** : logs horodatés dans `%LOCALAPPDATA%\TaskSchdBackupRestore\logs\` (rétention 14 jours),
   consultables en direct dans l'onglet Logs. L'interface et le CLI écrivent dans le **même** dossier.
 - **Intégrité vérifiée** : manifeste JSON + empreintes SHA-256 de chaque XML, vérifiées avant
-  toute écriture — une archive modifiée ou corrompue est refusée.
+  toute écriture — une archive modifiée ou corrompue est refusée. Le manifeste doit aussi être
+  cohérent : tâche déclarée deux fois, XML partagé par deux tâches ou hors du dossier, XML qui
+  n'est pas un document complet ⇒ refus (cf. `MIGRATION.md`, étape 3).
 
 ## Compatibilité Windows
 
 | Composant | Server 2008 R2 | Server 2012 | Server 2012 R2 | Server 2016 | Server 2019 | Server 2022 | Server 2025 | Windows 10 / 11 |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `tsbak.exe` (CLI, même moteur) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `TaskBackupRestore.exe` (interface) | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `TaskSchdBackupRestore.exe` (CLI, même moteur) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `TaskSchdBackupRestoreGui.exe` (interface) | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Pourquoi l'interface est-elle limitée ?** Elle repose sur WebView2 (Tauri 2). Microsoft a
 cessé toutes les mises à jour de WebView2 sur Windows 7 / Server 2008 R2 / 2012 (figé en
@@ -61,8 +67,8 @@ guidée sur les anciens serveurs.
 
 ## 📖 Guide d'utilisation (PDF)
 
-Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.1.2** — est
-inclus : **[`dist/Guide-tsbak.pdf`](dist/Guide-tsbak.pdf)**
+Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.2.0** — est
+inclus : **[`dist/Guide-TaskSchdBackupRestore.pdf`](dist/Guide-TaskSchdBackupRestore.pdf)**
 
 - vue d'ensemble : interface et ligne de commande, un même moteur (section 1) ;
 - export avec l'interface graphique, captures annotées pas à pas (section 2) ;
@@ -74,8 +80,8 @@ inclus : **[`dist/Guide-tsbak.pdf`](dist/Guide-tsbak.pdf)**
 - onglet *Logs* : le journal du jour en temps réel (section 5) ;
 - ligne de commande : `list` / `export` / `validate` / `import` (section 6) ;
 - assistants `.cmd` pour les serveurs 2008 R2 / 2012 (section 7) ;
-- options avancées : `--folder`, `--user-map`, `--password-file`, `--conflict-policy`,
-  import non interactif (section 8) ;
+- options avancées : `--folder`, `--undo-dir`, `--user-map`, `--password-file`,
+  `--conflict-policy`, import non interactif (section 8) ;
 - sécurité, bonnes pratiques et dépannage rapide (sections 9 et 10).
 
 Ses sources sont dans [`dist/guide/`](dist/guide/) (HTML + captures + scripts). Les captures se
@@ -104,14 +110,14 @@ Le générateur seul reste utilisable pour un PDF isolé (Edge headless, aucune 
 
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File dist/guide/scripts/make-pdf.ps1 `
-    -Html dist/guide/guide.html -Pdf dist/Guide-tsbak.pdf
+    -Html dist/guide/guide.html -Pdf dist/Guide-TaskSchdBackupRestore.pdf
 ```
 
 ## Démarrage rapide
 
 ### Interface graphique (Windows 10/11, Server 2016+)
 
-`dist\TaskBackupRestore.exe` — **exe portable unique**, aucune installation
+`dist\TaskSchdBackupRestoreGui.exe` — **exe portable unique**, aucune installation
 (WebView2 préinstallé sur ces systèmes).
 
 1. Onglet *Tâches & Export* → **Charger les tâches** → sélectionner (les tâches
@@ -126,21 +132,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File dist/guide/scripts/make-pdf.
 
 ```bat
 :: 1. Exporter toutes les tâches vers un dossier
-tsbak.exe export C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01
 
 ::    ... ou sans les tâches système \Microsoft\
-tsbak.exe export C:\tsbak\export-2026-01-01 --hide-microsoft
+TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-01-01 --hide-microsoft
 
 :: 2. Vérifier l'intégrité (manifeste + empreintes SHA-256)
-tsbak.exe validate C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe validate C:\TaskSchdBackupRestore\export-2026-01-01
 
 :: 3. Simuler (rien n'est écrit)
-tsbak.exe import C:\tsbak\export-2026-01-01 --dry-run
+TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dry-run
 
 :: 4. Importer réellement (en administrateur)
-tsbak.exe import C:\tsbak\export-2026-01-01
+TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ::    Options utiles :
 ::    --folder \Restauration-2026        restaure sous ce dossier, structure préservée
+::    --undo-dir C:\TaskSchdBackupRestore\undo          copies des tâches écrasées (réimportables)
 ::    --password-file mdp.txt            mots de passe (DOMAINE\user=motdepasse, 1/ligne)
 ::    --user-map OLDPC\user:NEWPC\user   remplace un compte source par un compte cible
 ::    --skip-password-tasks              ignore (sans bloquer) les tâches sans mot de passe
@@ -150,8 +157,8 @@ tsbak.exe import C:\tsbak\export-2026-01-01
 ## Compilation
 
 ```bash
-# CLI (produit dist/tsbak.exe équivalent)
-cd tsbak
+# CLI (produit dist/TaskSchdBackupRestore.exe équivalent)
+cd engine
 cargo build --release
 cargo test
 
@@ -161,7 +168,7 @@ cargo build --release
 cargo test
 ```
 
-Le crate `tsbak` compile sur toute plateforme (l'accès COM réel au Task Scheduler est
+Le crate du moteur (`engine/`) compile sur toute plateforme (l'accès COM réel au Task Scheduler est
 isolé derrière `cfg(windows)`) ; seul `list`/`export`/`import` nécessitent une machine
 Windows, `validate` fonctionne partout.
 
@@ -201,10 +208,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\make-release.ps1
 ```
 
 Il lit la version dans `src-tauri/tauri.conf.json`, reconstruit
-`release\tsbak-<version>-windows\` (exe + assistants `.cmd` + `Guide-tsbak.pdf` +
+`release\TaskSchdBackupRestore-<version>-windows\` (exe + assistants `.cmd` + `Guide-TaskSchdBackupRestore.pdf` +
 `Memo-motifs.pdf` + sources du guide) en écartant les fichiers de travail des captures et les
 **données d'export réelles** (recréées par `guide\demo\*.cmd`), puis produit
-`release\tsbak-<version>-windows.zip` — archive à entrées `/`, lisible hors Windows — et
+`release\TaskSchdBackupRestore-<version>-windows.zip` — archive à entrées `/`, lisible hors Windows — et
 affiche les empreintes SHA-256. Le dossier `release/` n'est pas versionné : il est joint à la
 release GitHub.
 
@@ -226,7 +233,7 @@ cargo test e2e_export_zip_aes_then_reimport -- --ignored --nocapture
   jamais écrits sur disque, jamais renvoyés à l'interface : ils restent en mémoire dans le
   backend, effaçables via « Effacer les mots de passe ».
 - Transfert vers le processus élevé via un fichier de réponses JSON temporaire
-  (`%TEMP%\task-backup-restore`, ACL utilisateur uniquement), **supprimé dans tous les cas**.
+  (`%TEMP%\TaskSchdBackupRestore`, ACL utilisateur uniquement), **supprimé dans tous les cas**.
 - Les XML exportés ne contiennent aucun secret : Windows retire automatiquement les mots de
   passe des tâches `TASK_LOGON_PASSWORD`.
 - L'import vérifie manifeste + empreintes + XML bien formés **avant** toute écriture, refuse
@@ -236,10 +243,10 @@ cargo test e2e_export_zip_aes_then_reimport -- --ignored --nocapture
 
 | Chemin | Rôle |
 |---|---|
-| `tsbak/` | Crate Rust du moteur + CLI `tsbak.exe` (`scheduler/`, `export.rs`, `import.rs`, `action.rs`, `password.rs`, `answers.rs`, `wizard.rs`) |
+| `engine/` | Crate Rust du moteur + CLI `TaskSchdBackupRestore.exe` (`scheduler/`, `export.rs`, `import.rs`, `action.rs`, `password.rs`, `answers.rs`, `wizard.rs`) |
 | `src-tauri/` | Application Tauri 2 : commandes (`commands.rs`), archives ZIP/AES (`archive.rs`), helper d'élévation (`helper.rs`), logs (`app_log.rs`) |
 | `ui/` | Frontend statique HTML/CSS/JS (sans framework) ; palettes dans `ui/themes/` (`legacy` = publié, `hestia` = variante locale) |
-| `dist/` | Livraison : `TaskBackupRestore.exe`, `tsbak.exe`, assistants `.cmd`, `Guide-tsbak.pdf` + `Memo-motifs.pdf` + sources du guide (`guide/`, captures et scripts) |
+| `dist/` | Livraison : `TaskSchdBackupRestoreGui.exe`, `TaskSchdBackupRestore.exe`, assistants `.cmd`, `Guide-TaskSchdBackupRestore.pdf` + `Memo-motifs.pdf` + sources du guide (`guide/`, captures et scripts) |
 | `tools/` | Scripts de maintenance : générateur d'icône (`make_icon.py`), assemblage des artefacts de release (`make-release.ps1`), thème de l'interface (`select-theme.ps1`), fraîcheur et régénération du guide PDF (`guide-pdf.ps1`) |
 | `.github/workflows/` | Intégration continue : `ci.yml` (tests des deux crates à chaque *push*), `guide-pdf.yml` (guide PDF régénéré et contrôlé) |
 

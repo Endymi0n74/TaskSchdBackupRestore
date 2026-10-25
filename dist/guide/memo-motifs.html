@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Mémo — Motifs d'inclusion / exclusion (tsbak)</title>
+<title>Mémo — Motifs d'inclusion / exclusion (TaskSchdBackupRestore)</title>
 <style>
   :root {
     --primary: #1e5aa8;
@@ -71,7 +71,7 @@
 
 <div class="band">
   <h1>Mémo — Motifs d'inclusion / exclusion</h1>
-  <p>Sélection des tâches planifiées dans <strong>tsbak</strong> (interface et ligne de commande) — version 1.0.0</p>
+  <p>Sélection des tâches planifiées dans <strong>TaskSchdBackupRestore</strong> (interface et ligne de commande) — version 1.0.0</p>
 </div>
 
 <h2>1. Règle d'or</h2>
@@ -112,16 +112,16 @@ dans l'interface ; option répétable <code>--include</code>/<code>--exclude</co
 
 <h2>4. Exemples CLI</h2>
 <pre><span class="c">:: tout sauf les tâches systeme \Microsoft\</span>
-tsbak.exe export D:\export --hide-microsoft
+TaskSchdBackupRestore.exe export D:\export --hide-microsoft
 
 <span class="c">:: uniquement le dossier \Backup\ , sans sa sous-partie \Backup\Ancien\</span>
-tsbak.exe export D:\export --include "\Backup\*" --exclude "\Backup\Ancien\*"
+TaskSchdBackupRestore.exe export D:\export --include "\Backup\*" --exclude "\Backup\Ancien\*"
 
 <span class="c">:: deux dossiers + exclusion systeme explicite (equivalente a --hide-microsoft)</span>
-tsbak.exe export D:\export --include "\Backup\*" --include "\Maintenance\*" --exclude "\Microsoft\*"
+TaskSchdBackupRestore.exe export D:\export --include "\Backup\*" --include "\Maintenance\*" --exclude "\Microsoft\*"
 
 <span class="c">:: reperage : lister le resultat des filtres sans rien exporter (voir le compteur)</span>
-tsbak.exe list --recursive --hide-microsoft</pre>
+TaskSchdBackupRestore.exe list --recursive --hide-microsoft</pre>
 
 <div class="callout tip">
   <strong>Vérifier avant d'exporter :</strong> le rapport d'export affiche « N tâche(s) exportée(s) … M ignorée(s) par les
@@ -130,8 +130,8 @@ tsbak.exe list --recursive --hide-microsoft</pre>
 </div>
 
 <div class="footer-note">
-  tsbak v1.1.2 — Mémo des filtres d'export. Détail complet dans le <strong>Guide d'utilisation</strong>
-  (<code>dist\Guide-tsbak.pdf</code>, section 3) et <code>MIGRATION.md</code>.
+  TaskSchdBackupRestore v1.2.0 — Mémo des filtres d'export. Détail complet dans le <strong>Guide d'utilisation</strong>
+  (<code>dist\Guide-TaskSchdBackupRestore.pdf</code>, section 3) et <code>MIGRATION.md</code>.
 </div>
 
 </body>

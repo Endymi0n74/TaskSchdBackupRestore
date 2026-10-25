@@ -1,7 +1,7 @@
 //! Arrêt déterministe du processus à la fermeture de la fenêtre.
 //!
 //!(bug corrigé en 1.1.1) Sous Windows Server 2016 / 2019, la fermeture de
-//! la fenêtre pouvait laisser `TaskBackupRestore.exe` **vivant** dans le
+//! la fenêtre pouvait laisser `TaskSchdBackupRestoreGui.exe` **vivant** dans le
 //! gestionnaire des tâches : la fin de session passait alors par la
 //! déconnexion des objets WebView2 puis par la boucle d'événements, deux
 //! étapes susceptibles de bloquer (runtime WebView2 anciennement figé sur

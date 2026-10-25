@@ -1,11 +1,15 @@
 [package]
-name = "task-backup-restore"
-version = "1.1.2"
-description = "Task backup and restore — export/import des tâches planifiées Windows (Task Scheduler) avec journalisation"
+name = "taskschdbackuprestore-gui"
+version = "1.2.0"
+description = "TaskSchdBackupRestore — export/import des tâches planifiées Windows (Task Scheduler) avec journalisation"
 authors = ["Endymi0n74"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.70"
+
+[[bin]]
+name = "TaskSchdBackupRestoreGui"
+path = "src/main.rs"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -18,7 +22,7 @@ chrono = { version = "0.4", default-features = false, features = ["clock"] }
 rfd = "0.15"
 # Archives ZIP d'export : compression Deflate + chiffrement AES-256 (WinZip AES).
 zip = { version = "4.6", default-features = false, features = ["aes-crypto", "deflate", "time"] }
-tsbak = { path = "../tsbak" }
+taskschdbackuprestore = { path = "../engine" }
 
 # Processus enfant élevé (ShellExecuteExW, verbe "runas") — Windows uniquement.
 [target.'cfg(windows)'.dependencies]

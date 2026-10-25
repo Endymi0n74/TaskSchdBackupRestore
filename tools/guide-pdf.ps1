@@ -40,7 +40,7 @@ $generateur = 'dist/guide/scripts/make-pdf.ps1'
 # PDF livre -> source HTML + dossier des captures.
 $cibles = @(
     [pscustomobject]@{
-        Pdf     = 'dist/Guide-tsbak.pdf'
+        Pdf     = 'dist/Guide-TaskSchdBackupRestore.pdf'
         Html    = 'dist/guide/guide.html'
         Sources = @('dist/guide/guide.html', 'dist/guide/shots')
     },

@@ -2,7 +2,7 @@
    Thème publié (palette historique) — ui/themes/legacy.css
 
    Feuillet de palette de référence : c'est celui que chargent les
-   binaires publiés (TaskBackupRestore.exe) et c'est le thème actif
+   binaires publiés (TaskSchdBackupRestoreGui.exe) et c'est le thème actif
    par défaut de ui/index.html.
 
    Bascule : tools\select-theme.ps1 -Action Set -Theme hestia|legacy

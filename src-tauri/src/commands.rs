@@ -1,7 +1,7 @@
 //! Commandes Tauri exposées au frontend (français, interface statique).
 //!
 //! Flux d'import en deux phases, réutilisant la classification unique de
-//! `tsbak` (`build_plan` puis `execute_plan`) :
+//! `TaskSchdBackupRestore` (`build_plan` puis `execute_plan_with_undo`) :
 //! 1. `build_plan` (sans décisions) → liste les tâches à résoudre ;
 //! 2. l'utilisateur règle conflits/mappings/mots de passe dans l'interface ;
 //! 3. `import_execute` reconstruit le plan avec les décisions puis l'exécute.
@@ -18,14 +18,16 @@ use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use tsbak::action::{self, ActionOverride};
-use tsbak::answers::{AnswerFile, ConflictDecision};
-use tsbak::export::{export, PatternFilter};
-use tsbak::import::{build_plan, execute_plan, load_and_verify, ImportOptions, PlanItem};
-use tsbak::model::ImportAction;
-use tsbak::password::PasswordResolver;
-use tsbak::scheduler::TaskSchedulerApi;
-use tsbak::wizard::NullInteractor;
+use taskschdbackuprestore::action::{self, ActionOverride};
+use taskschdbackuprestore::answers::{AnswerFile, ConflictDecision};
+use taskschdbackuprestore::export::{export, PatternFilter};
+use taskschdbackuprestore::import::{
+    build_plan, execute_plan_with_undo, load_and_verify, ImportOptions, PlanItem,
+};
+use taskschdbackuprestore::model::ImportAction;
+use taskschdbackuprestore::password::PasswordResolver;
+use taskschdbackuprestore::scheduler::TaskSchedulerApi;
+use taskschdbackuprestore::wizard::NullInteractor;
 
 use crate::app_log::AppLog;
 use crate::archive;
@@ -38,7 +40,7 @@ pub type AppStateRef<'a> = State<'a, AppState>;
 pub(crate) fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>, String> {
     #[cfg(windows)]
     {
-        tsbak::scheduler::windows_impl::WindowsScheduler::connect()
+        taskschdbackuprestore::scheduler::windows_impl::WindowsScheduler::connect()
             .map(|s| Box::new(s) as Box<dyn TaskSchedulerApi>)
             .map_err(|e| e.to_string())
     }
@@ -145,6 +147,8 @@ pub struct ReportView {
     pub skipped: Vec<String>,
     pub blocked: Vec<(String, String)>,
     pub failed: Vec<(String, String)>,
+    /// Fichiers de sauvegarde écrits avant un écrasement (dossier = archive).
+    pub backed_up: Vec<String>,
     pub exit_code: i32,
 }
 
@@ -200,7 +204,7 @@ fn plan_item_view(item: &PlanItem) -> PlanItemView {
 }
 
 /// Convertit un rapport d'exécution métier en vue sérialisable (sans secret).
-pub(crate) fn report_view(report: &tsbak::model::ExecutionReport, dry_run: bool) -> ReportView {
+pub(crate) fn report_view(report: &taskschdbackuprestore::model::ExecutionReport, dry_run: bool) -> ReportView {
     ReportView {
         dry_run,
         created: report.created.clone(),
@@ -208,6 +212,7 @@ pub(crate) fn report_view(report: &tsbak::model::ExecutionReport, dry_run: bool)
         skipped: report.skipped.clone(),
         blocked: report.blocked.clone(),
         failed: report.failed.clone(),
+        backed_up: report.backed_up.clone(),
         exit_code: report.exit_code(),
     }
 }
@@ -243,6 +248,13 @@ pub(crate) fn log_import_report(log: &AppLog, verb: &str, report: &ReportView) {
     for (path, reason) in &report.failed {
         log.error(&format!("Import : échec {path} ({reason})"));
     }
+    if let Some(dossier) = report.backed_up.first().and_then(|f| Path::new(f).parent()) {
+        log.info(&format!(
+            "Import : {} sauvegarde(s) avant écrasement dans {} (réimportable)",
+            report.backed_up.len(),
+            dossier.display()
+        ));
+    }
     log_import_summary(log, verb, report);
 }
 
@@ -260,9 +272,9 @@ pub async fn list_tasks(
     let handles = scheduler.list_tasks(recursive).map_err(|e| e.to_string())?;
     let mut views = Vec::with_capacity(handles.len());
     for handle in &handles {
-        let auth = scheduler.get_task_auth_info(&handle.path).unwrap_or(tsbak::scheduler::TaskAuthInfo {
+        let auth = scheduler.get_task_auth_info(&handle.path).unwrap_or(taskschdbackuprestore::scheduler::TaskAuthInfo {
             user_id: None,
-            logon_type: tsbak::model::LogonType::None,
+            logon_type: taskschdbackuprestore::model::LogonType::None,
         });
         views.push(TaskView {
             path: handle.path.clone(),
@@ -321,7 +333,7 @@ fn export_tasks_impl(
 /// aux tests unitaires `MockScheduler`, sans accès COM).
 ///
 /// En mode archive, les fichiers d'export sont écrits dans un dossier
-/// temporaire (`%TEMP%\tsbak-export\…`) **puis** compressés vers `dir` : le
+/// temporaire (`%TEMP%\TaskSchdBackupRestore-export\…`) **puis** compressés vers `dir` : le
 /// dossier de destination ne reçoit que le `.zip`, jamais les XML ni le
 /// `manifest.json` à côté de l'archive. Le dossier temporaire est supprimé
 /// dans tous les cas (succès ou échec).
@@ -398,7 +410,7 @@ fn write_export(
     zip_name: Option<&str>,
     zip_password: Option<&str>,
 ) -> Result<ExportSummaryView, String> {
-    let summary = export(scheduler, out_dir, true, filter, &tsbak::local_host_name())
+    let summary = export(scheduler, out_dir, true, filter, &taskschdbackuprestore::local_host_name())
         .map_err(|e| e.to_string())?;
     for path in &summary.exported {
         log.info(&format!("Export : {path}"));
@@ -436,10 +448,10 @@ fn write_export(
 }
 
 /// Dossier temporaire unique d'un export en archive
-/// (`%TEMP%\tsbak-export\<pid>-<nanos>`), supprimé en fin d'export. Les
+/// (`%TEMP%\TaskSchdBackupRestore-export\<pid>-<nanos>`), supprimé en fin d'export. Les
 /// dossiers laissés par un plantage (> 7 jours) sont purgés à chaque appel.
 fn new_staging_dir() -> Result<PathBuf, String> {
-    let base = std::env::temp_dir().join("tsbak-export");
+    let base = std::env::temp_dir().join("TaskSchdBackupRestore-export");
     purge_old_temp_dirs(&base);
     let nanos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -670,7 +682,12 @@ async fn import_execute_impl(
     let verb = if dry_run { "Simulation d'import" } else { "Import" };
     log.info(&format!("{verb} depuis {dir} ({} tâche(s))", plan.len()));
 
-    let report = execute_plan(scheduler.as_ref(), &plan, dry_run).map_err(|e| e.to_string())?;
+    // Écrasements réversibles : le XML actuel de chaque tâche remplacée est
+    // copié dans un dossier d'annulation (archive réimportable). Aucun en
+    // dry-run, aucune sauvegarde sans écriture.
+    let undo = (!dry_run).then(taskschdbackuprestore::import::default_undo_dir);
+    let report = execute_plan_with_undo(scheduler.as_ref(), &plan, dry_run, undo.as_deref())
+        .map_err(|e| e.to_string())?;
     let view = report_view(&report, dry_run);
     log_import_report(log, verb, &view);
     Ok(view)
@@ -710,7 +727,7 @@ pub async fn is_elevated() -> bool {
 fn current_is_elevated() -> bool {
     #[cfg(windows)]
     {
-        tsbak::scheduler::windows_impl::is_elevated()
+        taskschdbackuprestore::scheduler::windows_impl::is_elevated()
     }
     #[cfg(not(windows))]
     {
@@ -730,13 +747,13 @@ pub async fn pick_folder(title: String) -> Result<Option<String>, String> {
 pub async fn pick_zip_file(title: String) -> Result<Option<String>, String> {
     let picked = rfd::FileDialog::new()
         .set_title(&title)
-        .add_filter("Archive d'export tsbak (.zip)", &["zip"])
+        .add_filter("Archive d'export TaskSchdBackupRestore (.zip)", &["zip"])
         .pick_file();
     Ok(picked.map(|p| p.to_string_lossy().to_string()))
 }
 
 /// Détection automatique des .zip : extrait l'archive vers un dossier
-/// temporaire unique (`%TEMP%\tsbak-extract\...`) après validation complète,
+/// temporaire unique (`%TEMP%\TaskSchdBackupRestore-extract\...`) après validation complète,
 /// puis renvoie le dossier réel à utiliser pour vérifier/planifier/importer.
 /// Les anciens dossiers d'extraction (> 7 jours) sont purgés à chaque appel.
 #[tauri::command]
@@ -745,7 +762,7 @@ pub async fn extract_zip_auto(
     zip_path: String,
     password: Option<String>,
 ) -> Result<String, String> {
-    let base = std::env::temp_dir().join("tsbak-extract");
+    let base = std::env::temp_dir().join("TaskSchdBackupRestore-extract");
     purge_old_temp_dirs(&base);
 
     let name = Path::new(&zip_path)
@@ -774,8 +791,8 @@ pub async fn extract_zip_auto(
     Ok(dest.to_string_lossy().to_string())
 }
 
-/// Supprime les dossiers temporaires de travail (`tsbak-extract`,
-/// `tsbak-export`) plus vieux de 7 jours : reliquats d'un plantage.
+/// Supprime les dossiers temporaires de travail (`TaskSchdBackupRestore-extract`,
+/// `TaskSchdBackupRestore-export`) plus vieux de 7 jours : reliquats d'un plantage.
 fn purge_old_temp_dirs(base: &std::path::Path) {
     use std::time::{Duration, SystemTime};
     let cutoff = SystemTime::now() - Duration::from_secs(7 * 24 * 3600);
@@ -813,7 +830,7 @@ pub async fn extract_zip_archive(
 // ---------------------------------------------------------------------------
 
 /// Convertit les décisions de l'interface en fichier de réponses `AnswerFile`
-/// (format déjà supporté par la logique d'import de `tsbak`). Partagé avec
+/// (format déjà supporté par la logique d'import de `TaskSchdBackupRestore`). Partagé avec
 /// le processus helper élevé (`helper::run_elevated_import`), qui y ajoute
 /// les mots de passe mémorisés en mémoire.
 pub(crate) fn build_answers(decisions: Option<&ImportDecisions>) -> AnswerFile {
@@ -848,8 +865,8 @@ mod export_archive_tests {
     use crate::app_log::AppLog;
     use std::collections::BTreeSet;
     use tempfile::tempdir;
-    use tsbak::model::LogonType;
-    use tsbak::scheduler::mock::{MockScheduler, MockTask};
+    use taskschdbackuprestore::model::LogonType;
+    use taskschdbackuprestore::scheduler::mock::{MockScheduler, MockTask};
 
     /// Planificateur simule avec deux taches (aucun acces COM).
     fn sample_scheduler() -> MockScheduler {
@@ -886,13 +903,13 @@ mod export_archive_tests {
     /// Verrou partage par les tests qui observent le dossier de staging :
     /// les tests tournent en parallele dans le meme processus, et la
     /// comparaison avant/apres serait faussee par l'export concurrent d'un
-    /// autre test (meme `%TEMP%\tsbak-export`, memes suffixes pid-nanos).
+    /// autre test (meme `%TEMP%\TaskSchdBackupRestore-export`, memes suffixes pid-nanos).
     static STAGING_LOCK: Mutex<()> = Mutex::new(());
 
-    /// Ensemble des dossiers de staging presents dans `%TEMP%\tsbak-export`
+    /// Ensemble des dossiers de staging presents dans `%TEMP%\TaskSchdBackupRestore-export`
     /// (vide si ce dossier n'existe pas encore).
     fn staging_names() -> BTreeSet<String> {
-        std::fs::read_dir(std::env::temp_dir().join("tsbak-export"))
+        std::fs::read_dir(std::env::temp_dir().join("TaskSchdBackupRestore-export"))
             .map(|entries| {
                 entries
                     .flatten()
@@ -985,6 +1002,95 @@ mod export_archive_tests {
         assert!(summary.zip_path.is_none());
         assert!(!summary.zip_encrypted);
         assert_eq!(summary.exported.len(), 2);
+    }
+
+    /// Preuve du seam archive : un export aux noms de taches piegeux (chemins
+    /// qui se confondaient dans l'ancien codage, soulignes, espaces de taches
+    /// reelles, imbrication profonde) doit traverser `zip_dir` puis
+    /// `unzip_verified` (donc `load_and_verify`) et ressortir intact.
+    ///
+    /// Regression : avec l'ancien codage, `\A__B\T` et `\A\B__T` partageaient
+    /// `A__B__T.xml` ; l'archive devenait alors completement inimportable
+    /// (empreinte SHA-256 incoherente pour l'une des deux taches).
+    #[test]
+    fn roundtrip_zip_avec_noms_de_taches_piegeux() {
+        let _staging = STAGING_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let logs = tempdir().expect("dossier de logs");
+        let log = AppLog::with_dir(logs.path().join("logs"));
+        let dest = tempdir().expect("dossier de destination");
+
+        let noms = [
+            "\\A__B\\T",
+            "\\A\\B__T",
+            "\\A_uB\\T",
+            "\\Backup\\Deep\\Nested\\Task",
+            "\\Mes Taches\\Sauvegarde (quotidienne)",
+        ];
+        let mut scheduler = MockScheduler::new(true);
+        for (i, nom) in noms.iter().enumerate() {
+            scheduler = scheduler.with_task(
+                nom,
+                MockTask {
+                    xml: format!("<Task>{i}</Task>"),
+                    user_id: None,
+                    logon_type: LogonType::None,
+                },
+            );
+        }
+
+        let summary = export_with(
+            &scheduler,
+            &log,
+            dest.path().to_str().expect("chemin utf-8"),
+            Vec::new(),
+            Vec::new(),
+            Some("preuve.zip".to_string()),
+            None,
+        )
+        .expect("export en archive");
+        assert_eq!(summary.exported.len(), noms.len());
+        assert_eq!(
+            entry_names(dest.path()),
+            vec!["preuve.zip".to_string()],
+            "la destination ne doit recevoir que le .zip"
+        );
+
+        let extract = logs.path().join("extrait");
+        let count = archive::unzip_verified(
+            &log,
+            &dest.path().join("preuve.zip"),
+            &extract,
+            None,
+        )
+        .expect("l'archive du seam doit etre valide apres extraction");
+        assert_eq!(
+            count,
+            noms.len() + 1,
+            "un XML par tache plus le manifeste"
+        );
+
+        // Chaque tache du manifeste extrait possede SON fichier et SON empreinte.
+        let (manifest, xmls) = load_and_verify(&extract).expect("archive rechargeable");
+        assert_eq!(manifest.tasks.len(), noms.len());
+        let mut fichiers: Vec<&str> = manifest.tasks.iter().map(|t| t.xml_file.as_str()).collect();
+        fichiers.sort_unstable();
+        fichiers.dedup();
+        assert_eq!(
+            fichiers.len(),
+            noms.len(),
+            "un fichier distinct par tache : {fichiers:?}"
+        );
+        for record in &manifest.tasks {
+            let xml = xmls
+                .get(&record.path)
+                .unwrap_or_else(|| panic!("XML absent pour {}", record.path));
+            assert_eq!(
+                taskschdbackuprestore::hash::sha256_hex(xml.as_bytes()),
+                record.sha256,
+                "empreinte incoherente pour {}",
+                record.path
+            );
+        }
     }
 
     /// Un nom d'archive invalide (« .. » interdit) echoue avant toute

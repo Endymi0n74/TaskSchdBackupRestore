@@ -2,7 +2,7 @@
 # verification visuelle, sans navigateur : memes coordonnees % que guide.html.
 # Sortie : dist\guide\figcheck\fig-NN.png (a supprimer apres controle).
 param(
-  [string]$Repo = "D:\Codex\tsbak-gui"
+  [string]$Repo = "D:\Codex\TaskSchdBackupRestore"
 )
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Drawing

@@ -1,6 +1,6 @@
 //! Journalisation fichier simple pour le CLI : un fichier horodate par jour
-//! dans `%LOCALAPPDATA%\tsbak\logs\` (le meme dossier que l'interface
-//! graphique Task backup and restore), avec retention de 14 jours.
+//! dans `%LOCALAPPDATA%\TaskSchdBackupRestore\logs\` (le meme dossier que l'interface
+//! graphique TaskSchdBackupRestore), avec retention de 14 jours.
 //!
 //! La journalisation est *best-effort* : elle ne fait jamais echouer le
 //! programme (les erreurs d'ecriture sont ignorees silencieusement).
@@ -21,23 +21,20 @@ struct LogFile {
     day: String,
 }
 
-/// Repertoire des journaux : variable d'environnement `TSBAK_LOG_DIR` si
-/// definie (tests), sinon `%LOCALAPPDATA%\tsbak\logs`, sinon un fallback dans
-/// le dossier temporaire (plateformes sans LOCALAPPDATA).
+/// Repertoire des journaux : variable d'environnement `TASKSCHDBACKUPRESTORE_LOG_DIR` si
+/// definie (tests), sinon `%LOCALAPPDATA%\TaskSchdBackupRestore\logs` (repli : dossier
+/// temporaire), c'est-a-dire [`crate::data_dir`] : un seul proprietaire du chemin.
 pub fn log_dir() -> PathBuf {
-    if let Ok(dir) = std::env::var("TSBAK_LOG_DIR") {
+    if let Ok(dir) = std::env::var("TASKSCHDBACKUPRESTORE_LOG_DIR") {
         return PathBuf::from(dir);
     }
-    let base = std::env::var("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| std::env::temp_dir().join("tsbak-logs"));
-    base.join("tsbak").join("logs")
+    crate::data_dir().join("logs")
 }
 
 /// Chemin du fichier de journal du jour courant.
 pub fn log_file_path() -> PathBuf {
     log_dir().join(format!(
-        "tsbak-{}.log",
+        "TaskSchdBackupRestore-{}.log",
         Local::now().format("%Y-%m-%d")
     ))
 }
@@ -62,7 +59,7 @@ pub fn init_logging() {
     }
 }
 
-/// Purge les fichiers `tsbak-YYYY-MM-DD.log` plus vieux que `keep_days` jours.
+/// Purge les fichiers `TaskSchdBackupRestore-YYYY-MM-DD.log` plus vieux que `keep_days` jours.
 fn purge_older_than(dir: &Path, keep_days: i64) {
     let cutoff = Local::now().date_naive() - chrono::Duration::days(keep_days);
     let Ok(entries) = fs::read_dir(dir) else {
@@ -71,7 +68,7 @@ fn purge_older_than(dir: &Path, keep_days: i64) {
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
         let Some(stem) = name
-            .strip_prefix("tsbak-")
+            .strip_prefix("TaskSchdBackupRestore-")
             .and_then(|s| s.strip_suffix(".log"))
         else {
             continue;
@@ -136,7 +133,7 @@ mod tests {
     fn ecrit_et_alterne_les_journaux() {
         let dir = tempdir().unwrap();
         // Dirige la journalisation vers le dossier de test.
-        std::env::set_var("TSBAK_LOG_DIR", dir.path());
+        std::env::set_var("TASKSCHDBACKUPRESTORE_LOG_DIR", dir.path());
         init_logging();
         info("demarrage du test");
         error("erreur simulee");
@@ -148,12 +145,12 @@ mod tests {
         assert!(content.contains("ERROR erreur simulee"));
 
         // Purge : un vieux journal doit disparaitre a la prochaine init.
-        let old = dir.path().join("tsbak-2020-01-01.log");
+        let old = dir.path().join("TaskSchdBackupRestore-2020-01-01.log");
         fs::write(&old, "ancien").unwrap();
         assert!(old.exists());
         init_logging();
         assert!(!old.exists(), "les journaux de plus de 14 jours sont purges");
 
-        std::env::remove_var("TSBAK_LOG_DIR");
+        std::env::remove_var("TASKSCHDBACKUPRESTORE_LOG_DIR");
     }
 }

@@ -1,7 +1,7 @@
 # ============================================================
 #  guide-pdf.yml - le guide PDF livre reste a jour
 #
-#  Les PDF de dist/ (Guide-tsbak.pdf, Memo-motifs.pdf) sont generes
+#  Les PDF de dist/ (Guide-TaskSchdBackupRestore.pdf, Memo-motifs.pdf) sont generes
 #  depuis dist/guide/ (guide.html / memo-motifs.html + captures +
 #  make-pdf.ps1) par Edge headless, present sur les runners Windows.
 #
@@ -23,14 +23,14 @@ on:
     branches: [master]
     paths:
       - 'dist/guide/**'
-      - 'dist/Guide-tsbak.pdf'
+      - 'dist/Guide-TaskSchdBackupRestore.pdf'
       - 'dist/Memo-motifs.pdf'
       - 'tools/guide-pdf.ps1'
       - '.github/workflows/guide-pdf.yml'
   pull_request:
     paths:
       - 'dist/guide/**'
-      - 'dist/Guide-tsbak.pdf'
+      - 'dist/Guide-TaskSchdBackupRestore.pdf'
       - 'dist/Memo-motifs.pdf'
       - 'tools/guide-pdf.ps1'
       - '.github/workflows/guide-pdf.yml'
@@ -87,7 +87,7 @@ jobs:
         with:
           name: guide-pdf
           path: |
-            dist/Guide-tsbak.pdf
+            dist/Guide-TaskSchdBackupRestore.pdf
             dist/Memo-motifs.pdf
           if-no-files-found: error
           retention-days: 14
@@ -97,7 +97,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- dist/Guide-tsbak.pdf dist/Memo-motifs.pdf dist/guide/pdf-sources.sha256
+          git add -- dist/Guide-TaskSchdBackupRestore.pdf dist/Memo-motifs.pdf dist/guide/pdf-sources.sha256
           git status --short
           git commit -m "docs(guide): regenerer les PDF du guide [skip ci]"
           git push

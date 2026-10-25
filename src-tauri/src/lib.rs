@@ -1,4 +1,4 @@
-//! Task backup and restore : interface graphique d'export/import des tâches
+//! TaskSchdBackupRestore : interface graphique d'export/import des tâches
 //! planifiées Windows, avec journalisation fichier et vue des logs intégrée.
 
 mod app_log;
@@ -33,7 +33,7 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             let log = AppLog::init();
-            log.info("Task backup and restore démarré");
+            log.info("TaskSchdBackupRestore démarré");
             // Fichiers de travail orphelins d'une session précédente
             // (interface fermée avant la fin d'une élévation…) : purgés dès
             // l'ouverture — un fichier de réponses ne doit jamais survivre.
@@ -53,7 +53,7 @@ pub fn run() {
             // Application mono-fenêtre : la fermeture de la fenêtre est la
             // fin de session. Sortie déterministe du processus AVANT toute
             // déconnexion WebView2 — sous Windows Server 2016/2019, cette
-            // déconnexion pouvait laisser `TaskBackupRestore.exe` vivant
+            // déconnexion pouvait laisser `TaskSchdBackupRestoreGui.exe` vivant
             // (cf. `shutdown.rs`).
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 shutdown::exit_on_window_close(window.app_handle());
@@ -77,5 +77,5 @@ pub fn run() {
             commands::pick_folder,
         ])
         .run(tauri::generate_context!())
-        .expect("erreur lors du lancement de Task backup and restore");
+        .expect("erreur lors du lancement de TaskSchdBackupRestore");
 }

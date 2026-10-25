@@ -1,15 +1,20 @@
 # Migration des tâches planifiées — Server 2008 R2 → Server 2022
 
 Guide pas à pas pour migrer les **tâches planifiées** d'un ancien serveur
-(Windows Server **2008 R2**) vers un nouveau (**Server 2022**) avec `tsbak`
+(Windows Server **2008 R2**) vers un nouveau (**Server 2022**) avec `TaskSchdBackupRestore`
 (CLI + interface).
 
 Ce guide utilise la **ligne de commande sur les deux machines** : c'est la méthode
-recommandée, car l'interface graphique (`TaskBackupRestore.exe`) nécessite WebView2,
+recommandée, car l'interface graphique (`TaskSchdBackupRestoreGui.exe`) nécessite WebView2,
 que Microsoft ne met plus à jour sur 2008 R2 (voir [README](README.md#compatibilit%C3%A9-windows)).
 
 > 📄 L'illustration complète des commandes et des assistants se trouve dans le
-> [guide PDF](dist/Guide-tsbak.pdf). Ce document est la procédure ciblée « migration ».
+> [guide PDF](dist/Guide-TaskSchdBackupRestore.pdf). Ce document est la procédure ciblée « migration ».
+
+> **Renommage d'identité** : le binaire s'appelle désormais **`TaskSchdBackupRestore.exe`**
+> (ex-`tsbak.exe`) et l'interface **`TaskSchdBackupRestoreGui.exe`** (ex-`TaskBackupRestore.exe`).
+> Les commandes de ce guide sont à jour ; dans une procédure plus ancienne qui cite
+> `tsbak.exe`, seul le nom change — arguments et archives restent identiques.
 
 ---
 
@@ -17,7 +22,7 @@ que Microsoft ne met plus à jour sur 2008 R2 (voir [README](README.md#compatibi
 
 | # | Étape | Machine | Droits requis |
 |---|---|---|---|
-| 1 | Préparer et tester `tsbak.exe` | Source (2008 R2) | — |
+| 1 | Préparer et tester `TaskSchdBackupRestore.exe` | Source (2008 R2) | — |
 | 2 | **Exporter** les tâches (XML + manifeste) | Source (2008 R2) | Administrateur * |
 | 3 | **Vérifier** l'intégrité de l'archive | Source (2008 R2) | — |
 | 4 | **Transférer** l'archive vers la cible | — | — |
@@ -35,20 +40,20 @@ fonctionne sans élévation.
 
 ## Étape 1 — Préparation sur la source (2008 R2)
 
-1. **Copier `tsbak.exe`** (et éventuellement `export.cmd`, `import.cmd`,
-   `validate.cmd`) du dossier `dist\` vers la source, par exemple `C:\tsbak\`.
+1. **Copier `TaskSchdBackupRestore.exe`** (et éventuellement `export.cmd`, `import.cmd`,
+   `validate.cmd`) du dossier `dist\` vers la source, par exemple `C:\TaskSchdBackupRestore\`.
    Le CLI est **portable** : aucune installation, aucune dépendance runtime
    (seul le COM Task Scheduler, présent depuis Vista, est utilisé).
 
 2. **Tester rapidement le binaire** :
 
    ```bat
-   C:\tsbak\tsbak.exe --version
-   C:\tsbak\tsbak.exe list --recursive
+   C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe --version
+   C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe list --recursive
    ```
 
    > ⚠️ Le compilateur Rust déclare officiellement Windows 10 comme socle
-   > minimum ; en pratique `tsbak.exe` n'utilise que des API présentes depuis
+   > minimum ; en pratique `TaskSchdBackupRestore.exe` n'utilise que des API présentes depuis
    > Vista/7 et fonctionne sur 2008 R2 — ce test de 10 secondes le confirme
    > sur votre machine avant tout déploiement.
 
@@ -66,19 +71,19 @@ qu'administrateur*), sur la source :
 
 ```bat
 :: Export de TOUTES les tâches (y compris système \Microsoft\)
-C:\tsbak\tsbak.exe export C:\tsbak\export-2026-09-10
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-09-10
 
 :: Recommandé : exclure les tâches système
-C:\tsbak\tsbak.exe export C:\tsbak\export-2026-09-10 --hide-microsoft
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-09-10 --hide-microsoft
 
 :: Sélection fine par motifs (inclusion / exclusion répétables)
-C:\tsbak\tsbak.exe export C:\tsbak\export-2026-09-10 --include "\Backup\*" --exclude "\Microsoft\*" --exclude "\Logiciel-vieillot\*"
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe export C:\TaskSchdBackupRestore\export-2026-09-10 --include "\Backup\*" --exclude "\Microsoft\*" --exclude "\Logiciel-vieillot\*"
 ```
 
 Résultat attendu :
 
 ```
-168 tache(s) exportee(s) vers C:\tsbak\export-2026-09-10
+168 tache(s) exportee(s) vers C:\TaskSchdBackupRestore\export-2026-09-10
 ```
 
 Le dossier contient :
@@ -98,13 +103,30 @@ Le dossier contient :
 Toujours sur la source (ou n'importe où, `validate` ne touche pas au planificateur) :
 
 ```bat
-C:\tsbak\tsbak.exe validate C:\tsbak\export-2026-09-10
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe validate C:\TaskSchdBackupRestore\export-2026-09-10
 :: => Archive valide : 168 tache(s), exportee(s) le ... depuis 'SRV-2008R2'.
 ```
 
 Cette vérification contrôle le manifeste, les empreintes SHA-256 et le bon
 format des XML. **Toute altération (transfert corrompu, édition manuelle) est
 détectée ici** et à l'import.
+
+Si vous modifiez une archive à la main, elle est refusée dans quatre cas — le
+message nomme chaque fois l'entrée fautive :
+
+- **deux enregistrements pour la même tâche** (`path` répété, casse ignorée :
+  `\A` et `\a` sont la même tâche sous Windows) ;
+- **un `xml_file` partagé par deux tâches** : un XML décrit **une** tâche. Attention,
+  `A.xml `, `A.xml.` et `A.xml::$DATA` désignent le même fichier que `A.xml` ;
+- **un `xml_file` hors du dossier d'archive** : chemin absolu (`C:\Windows\win.ini`),
+  racine (`\evil.xml`) ou remontée (`..\..\secret.xml`) ; les sous-dossiers
+  internes (`sous/A.xml`) restent acceptés ;
+- **un `xml_file` que Windows réinterprète** : espace ou point final, `:` (flux NTFS),
+  caractère interdit (`? * < > " |`) ou de contrôle — un nom d'export se termine toujours
+  par `.xml` et les noms de tâches Windows excluent ces caractères ;
+- **un XML qui n'est pas un document complet** : une seule racine exigée, et hors
+  d'elle uniquement espaces, commentaires ou instructions de traitement — ni texte,
+  ni CDATA, ni DOCTYPE, ni seconde déclaration XML.
 
 ---
 
@@ -115,7 +137,7 @@ exemple : clé USB, partage réseau, SFTP…
 
 - L'intégrité est déjà garantie par les empreintes : un fichier tronqué sera
   refusé à l'import. Vous pouvez tout de même re-valider après transfert :
-  `tsbak.exe validate D:\tsbak\export-2026-09-10`.
+  `TaskSchdBackupRestore.exe validate D:\TaskSchdBackupRestore\export-2026-09-10`.
 - Si l'archive transite par un canal non fiable, préférer un canal chiffré
   (SFTP, VPN…) — les XML contiennent des comptes et chemins sensibles.
 
@@ -142,7 +164,7 @@ Avant l'import réel, sur le **nouveau** serveur :
 
    > 🔐 Le fichier contient des secrets : le garder hors du partage, le
    > supprimer dès la fin de la migration. Il n'est **jamais journalisé** par
-   > tsbak.
+   > TaskSchdBackupRestore.
 
 4. (Optionnel) Choisir un **dossier cible** du planificateur si vous voulez
    tester sans écraser l'existant, ex. `\Restauration-2026-09-10`.
@@ -154,7 +176,7 @@ Avant l'import réel, sur le **nouveau** serveur :
 Sur la cible, **sans rien écrire** :
 
 ```bat
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run
 ```
 
 Le rapport liste, pour chaque tâche, la décision prise par le moteur
@@ -187,25 +209,25 @@ Relancer la simulation avec les résolutions, jusqu'à obtenir un plan propre :
 
 ```bat
 :: Mapping d'utilisateurs source:cible (répétable)
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run ^
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run ^
     --user-map "SRV-2008R2\svc_backup:SRV-2022\svc_backup" ^
     --user-map "ANCIEN-DOM\svc_batch:NOUVEAU-DOM\svc_batch"
 
 :: + mots de passe (fichier "utilisateur=mot_de_passe")
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run ^
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run ^
     --user-map "SRV-2008R2\svc_backup:SRV-2022\svc_backup" ^
-    --password-file C:\tsbak\mots_de_passe.txt
+    --password-file C:\TaskSchdBackupRestore\mots_de_passe.txt
 
 :: Décider pour les conflits
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run --conflict-policy overwrite
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run --conflict-policy overwrite
 
 :: Ou : ignorer (sans bloquer) les tâches dont on n'a pas le mot de passe
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run --skip-password-tasks
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run --skip-password-tasks
 
 :: Tout combiné, avec restauration sous un dossier dédié (test)
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --dry-run ^
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --dry-run ^
     --user-map "SRV-2008R2\svc_backup:SRV-2022\svc_backup" ^
-    --password-file C:\tsbak\mots_de_passe.txt ^
+    --password-file C:\TaskSchdBackupRestore\mots_de_passe.txt ^
     --conflict-policy overwrite ^
     --folder "\Restauration-2026-09-10"
 ```
@@ -230,9 +252,9 @@ Une fois la simulation au vert, relancer **sans** `--dry-run`, dans une
 invite **en administrateur** :
 
 ```bat
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 ^
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 ^
     --user-map "SRV-2008R2\svc_backup:SRV-2022\svc_backup" ^
-    --password-file C:\tsbak\mots_de_passe.txt ^
+    --password-file C:\TaskSchdBackupRestore\mots_de_passe.txt ^
     --conflict-policy overwrite
 ```
 
@@ -248,7 +270,7 @@ Bloques (0) :
 
 **Code de sortie** : `0` = tout a réussi ; `1` = des tâches restent bloquées
 ou en échec partiel ; `2` = échec complet. En cas de code ≠ 0, consulter le
-rapport puis `%LOCALAPPDATA%\tsbak\logs\` pour le détail horodaté.
+rapport puis `%LOCALAPPDATA%\TaskSchdBackupRestore\logs\` pour le détail horodaté.
 
 ---
 
@@ -259,7 +281,7 @@ rapport puis `%LOCALAPPDATA%\tsbak\logs\` pour le détail horodaté.
 2. **Exécuter les tâches critiques** en test (clic droit → *Exécuter*).
 3. **Vérifier les journaux** :
    ```bat
-   notepad %LOCALAPPDATA%\tsbak\logs\tsbak-2026-09-10.log
+   notepad %LOCALAPPDATA%\TaskSchdBackupRestore\logs\TaskSchdBackupRestore-2026-09-10.log
    ```
 4. **Supprimer le fichier de mots de passe** et l'archive du serveur une fois
    la migration validée.
@@ -294,12 +316,12 @@ arguments*, `workingDirectory` = *Commencer dans*. Une valeur `""` vide le
 champ ; la première action `Exec` de la tâche est concernée.
 
 ```bat
-C:\tsbak\tsbak.exe import D:\tsbak\export-2026-09-10 --answer-file reponses.json --yes
-schtasks /create /sc weekly /tn "tsbak-restauration" /tr "C:\tsbak\import.cmd" /ru SYSTEM
+C:\TaskSchdBackupRestore\TaskSchdBackupRestore.exe import D:\TaskSchdBackupRestore\export-2026-09-10 --answer-file reponses.json --yes
+schtasks /create /sc weekly /tn "TaskSchdBackupRestore-restauration" /tr "C:\TaskSchdBackupRestore\import.cmd" /ru SYSTEM
 ```
 
 > 🔐 `reponses.json` contient des secrets : ACL utilisateur uniquement,
-> suppression après usage — tsbak n'en garde aucune trace.
+> suppression après usage — TaskSchdBackupRestore n'en garde aucune trace.
 
 ---
 
@@ -321,7 +343,7 @@ schtasks /create /sc weekly /tn "tsbak-restauration" /tr "C:\tsbak\import.cmd" /
 ## Rappel de sécurité
 
 - Les mots de passe ne sont **jamais** journalisés ni écrits sur disque par
-  tsbak — ils transitent uniquement en mémoire (ou dans un fichier que *vous*
+  TaskSchdBackupRestore — ils transitent uniquement en mémoire (ou dans un fichier que *vous*
   fournissez, à supprimer après usage).
 - L'import vérifie manifeste + empreintes + XML bien formés **avant** toute
   écriture : une archive corrompue ne crée rien.

@@ -25,7 +25,7 @@ public class ConS {
 }
 "@
 # minimize the GUI app so it does not overlap the console
-$gui = Get-Process TaskBackupRestore -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+$gui = Get-Process TaskSchdBackupRestoreGui -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
 if ($gui) { [ConS]::ShowWindow($gui.MainWindowHandle, 6) | Out-Null }
 
 $w = Start-Process -FilePath "cmd.exe" -ArgumentList @('/k', ('"' + $CmdFile + '"')) -PassThru

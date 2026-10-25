@@ -8,7 +8,7 @@
 # Usage :
 #   powershell -NoProfile -ExecutionPolicy Bypass -File take-console-shots.ps1
 param(
-  [string]$Repo = "D:\Codex\tsbak-gui"
+  [string]$Repo = "D:\Codex\TaskSchdBackupRestore"
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,13 +18,13 @@ $dist    = Join-Path $Repo "dist"
 $demo    = Join-Path $Repo "dist\guide\demo"
 
 # --- 04 : export filtre en ligne de commande (demo-export.cmd) ------------
-# En-tete + "tsbak export .\export-demo --include \MSIAfterburner" :
+# En-tete + "TaskSchdBackupRestore export .\export-demo --include \MSIAfterburner" :
 # 1 tache exportee, les autres ignorees par le filtre.
 & $cap -Inner (Join-Path $demo "demo-export.cmd") `
        -Out (Join-Path $shots "04-cli-export.png") -WaitSec 6
 
 # --- 05 : validation + simulation bloquee (demo-import.cmd) ---------------
-# "tsbak validate" puis "tsbak import --folder ... --dry-run --yes" :
+# "TaskSchdBackupRestore validate" puis "TaskSchdBackupRestore import --folder ... --dry-run --yes" :
 # l'utilisateur source n'est pas mappe -> tache bloquee (voir options
 # avancees : --user-map / --answer-file).
 & $cap -Inner (Join-Path $demo "demo-import.cmd") `

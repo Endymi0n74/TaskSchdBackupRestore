@@ -4,11 +4,11 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
-use tsbak::model::ConflictPolicy;
+use taskschdbackuprestore::model::ConflictPolicy;
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "tsbak",
+    name = "TaskSchdBackupRestore",
     version,
     about = "Export/import des taches planifiees Windows (Task Scheduler)"
 )]
@@ -89,6 +89,12 @@ pub enum Command {
         /// chaque tache sous ce dossier en preservant sa structure d'origine.
         #[arg(long)]
         folder: Option<String>,
+
+        /// Dossier d'annulation : le XML actuel de chaque tache ecrasee y est
+        /// copie **avant** l'ecriture, et le dossier est une archive
+        /// reimportable. Par defaut `%LOCALAPPDATA%\TaskSchdBackupRestore\undo\<horodatage>`.
+        #[arg(long)]
+        undo_dir: Option<PathBuf>,
     },
 
     /// Valide l'integrite d'une archive d'export (manifeste + empreintes + XML bien forme).

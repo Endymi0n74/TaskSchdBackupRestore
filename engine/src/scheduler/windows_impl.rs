@@ -28,7 +28,7 @@ use windows::Win32::System::TaskScheduler::{
     TASK_LOGON_PASSWORD, TASK_LOGON_S4U, TASK_LOGON_SERVICE_ACCOUNT, TASK_LOGON_TYPE,
 };
 
-use crate::error::{translate_hresult, Result, TsbakError};
+use crate::error::{translate_hresult, Result, BackupError};
 use crate::model::LogonType;
 use crate::scheduler::{parent_folder, TaskAuthInfo, TaskHandle, TaskSchedulerApi};
 
@@ -257,7 +257,7 @@ impl TaskSchedulerApi for WindowsScheduler {
         logon_type: LogonType,
     ) -> Result<()> {
         if !self.has_write_privileges() {
-            return Err(TsbakError::AccessDenied {
+            return Err(BackupError::AccessDenied {
                 operation: format!("RegisterTask({path})"),
             });
         }

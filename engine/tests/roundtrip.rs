@@ -5,14 +5,14 @@
 use std::collections::HashMap;
 
 use tempfile::tempdir;
-use tsbak::answers::AnswerFile;
-use tsbak::export::{export, PatternFilter};
-use tsbak::import::{build_plan, execute_plan, load_and_verify, ImportOptions};
-use tsbak::model::{ImportAction, LogonType};
-use tsbak::password::PasswordResolver;
-use tsbak::scheduler::mock::{MockScheduler, MockTask};
-use tsbak::scheduler::TaskSchedulerApi;
-use tsbak::wizard::NullInteractor;
+use taskschdbackuprestore::answers::AnswerFile;
+use taskschdbackuprestore::export::{export, PatternFilter};
+use taskschdbackuprestore::import::{build_plan, execute_plan, load_and_verify, ImportOptions};
+use taskschdbackuprestore::model::{ImportAction, LogonType};
+use taskschdbackuprestore::password::PasswordResolver;
+use taskschdbackuprestore::scheduler::mock::{MockScheduler, MockTask};
+use taskschdbackuprestore::scheduler::TaskSchedulerApi;
+use taskschdbackuprestore::wizard::NullInteractor;
 
 fn source_scheduler() -> MockScheduler {
     MockScheduler::new(true)
@@ -43,7 +43,7 @@ fn full_export_then_import_roundtrip_no_xml_error() {
     let filter = PatternFilter::new(vec![], vec![]);
     export(&source, dir.path(), true, &filter, "SOURCE-PC").unwrap();
 
-    // Verifie l'integrite de l'archive independamment (equivalent de `tsbak validate`).
+    // Verifie l'integrite de l'archive independamment (equivalent de `TaskSchdBackupRestore validate`).
     let (manifest, xmls) = load_and_verify(dir.path()).expect("l'archive exportee doit etre valide");
     assert_eq!(manifest.tasks.len(), 2);
 

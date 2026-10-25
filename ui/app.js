@@ -1,4 +1,4 @@
-// Task backup and restore — logique frontend (français, sans framework).
+// TaskSchdBackupRestore — logique frontend (français, sans framework).
 // S'appuie sur l'API Tauri globale injectée (withGlobalTauri: true).
 
 "use strict";
@@ -842,7 +842,7 @@ $("btn-open-logs").addEventListener("click", async () => {
 
 (async function init() {
   if (!TAURI) {
-    setStatus("Task backup and restore doit être exécuté depuis l'application (pas dans un navigateur).", "error");
+    setStatus("TaskSchdBackupRestore doit être exécuté depuis l'application (pas dans un navigateur).", "error");
     return;
   }
   try {

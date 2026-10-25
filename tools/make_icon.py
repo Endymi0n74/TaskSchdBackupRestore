@@ -1,4 +1,4 @@
-"""Génère l'icône de tsbak-gui : carré arrondi bleu, horloge blanche et coche verte.
+"""Génère l'icône de TaskSchdBackupRestore : carré arrondi bleu, horloge blanche et coche verte.
 
 Usage :
     python tools/make_icon.py

@@ -9,7 +9,7 @@
 //!   la compression comme à l'extraction ;
 //! - le manifeste et les empreintes SHA-256 sont des fichiers comme les
 //!   autres dans l'archive : rien n'est recalculé, la vérification
-//!   d'intégrité de `tsbak` (`load_and_verify`) s'applique à l'identique
+//!   d'intégrité de `TaskSchdBackupRestore` (`load_and_verify`) s'applique à l'identique
 //!   après extraction ;
 //! - l'extraction refuse les chemins absolus et les remontées `..`
 //!   (protection zip-slip) : chaque nom d'entrée est validé par
@@ -19,7 +19,7 @@
 //!   journalisé.
 //!
 //! Extraction en deux temps : d'abord dans un dossier temporaire, puis
-//! validation du manifeste via `tsbak::import::load_and_verify`, et
+//! validation du manifeste via `taskschdbackuprestore::import::load_and_verify`, et
 //! seulement ensuite renommage vers la destination finale. Une archive
 //! invalide ne pollue jamais la destination.
 
@@ -170,7 +170,7 @@ pub fn unzip_verified(
 
     // Validation d'intégrité (manifeste + empreintes) avant de promouvoir
     // l'extraction vers sa destination finale.
-    if let Err(e) = tsbak::import::load_and_verify(&staging) {
+    if let Err(e) = taskschdbackuprestore::import::load_and_verify(&staging) {
         let _ = fs::remove_dir_all(&staging);
         return Err(format!("archive invalide après extraction : {e}"));
     }
@@ -281,7 +281,7 @@ fn temp_dir_for(dest_dir: &Path) -> std::path::PathBuf {
         .file_name()
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_else(|| "extract".to_string());
-    parent.join(format!(".tsbak-extract-{base}"))
+    parent.join(format!(".TaskSchdBackupRestore-extract-{base}"))
 }
 
 /// Copie récursive de secours si `rename` échoue (disques différents).
@@ -309,7 +309,7 @@ mod tests {
     }
 
     /// Écrit un dossier d'export **valide** : manifeste conforme au format
-    /// `tsbak::model::Manifest` avec de vraies empreintes SHA-256.
+    /// `taskschdbackuprestore::model::Manifest` avec de vraies empreintes SHA-256.
     fn sample_export(dir: &Path) {
         fs::create_dir_all(dir.join("Backup")).unwrap();
         let nightly = "<Task>nightly</Task>";
@@ -318,8 +318,8 @@ mod tests {
         fs::write(dir.join("Backup__Weekly.xml"), weekly).unwrap();
         let manifest = format!(
             r#"{{"version":1,"exported_at":"2026-09-08T12:00:00Z","source_host":"PC-TEST","tasks":[{{"path":"\\Backup\\Nightly","xml_file":"Backup__Nightly.xml","sha256":"{h1}","user_id":null,"logon_type":"None"}},{{"path":"\\Backup\\Weekly","xml_file":"Backup__Weekly.xml","sha256":"{h2}","user_id":null,"logon_type":"None"}}]}}"#,
-            h1 = tsbak::hash::sha256_hex(nightly.as_bytes()),
-            h2 = tsbak::hash::sha256_hex(weekly.as_bytes()),
+            h1 = taskschdbackuprestore::hash::sha256_hex(nightly.as_bytes()),
+            h2 = taskschdbackuprestore::hash::sha256_hex(weekly.as_bytes()),
         );
         fs::write(dir.join("manifest.json"), manifest).unwrap();
     }
@@ -391,7 +391,7 @@ mod tests {
         let out = tempfile::tempdir().unwrap();
 
         // Manifeste référençant un XML dont l'empreinte ne correspond pas :
-        // la vérification d'intégrité de `tsbak` doit rejeter l'archive.
+        // la vérification d'intégrité de `TaskSchdBackupRestore` doit rejeter l'archive.
         let bad_src = tempfile::tempdir().unwrap();
         fs::write(bad_src.path().join("X.xml"), "<Task>x</Task>").unwrap();
         fs::write(
@@ -486,7 +486,7 @@ mod tests {
             w.write_all(
                 format!(
                     r#"{{"version":1,"exported_at":"2026-09-08T12:00:00Z","source_host":"PC-TEST","tasks":[{{"path":"\\Nightly","xml_file":"Nightly.xml","sha256":"{h}","user_id":null,"logon_type":"None"}}]}}"#,
-                    h = tsbak::hash::sha256_hex(xml.as_bytes()),
+                    h = taskschdbackuprestore::hash::sha256_hex(xml.as_bytes()),
                 )
                 .as_bytes(),
             )
@@ -514,7 +514,7 @@ mod tests {
         fs::write(src.path().join("Backup").join("Deep__Deep.xml"), deep).unwrap();
         let manifest = format!(
             r#"{{"version":1,"exported_at":"2026-09-08T12:00:00Z","source_host":"PC-TEST","tasks":[{{"path":"\\Backup\\Deep","xml_file":"Backup/Deep__Deep.xml","sha256":"{h}","user_id":null,"logon_type":"None"}}]}}"#,
-            h = tsbak::hash::sha256_hex(deep.as_bytes()),
+            h = taskschdbackuprestore::hash::sha256_hex(deep.as_bytes()),
         );
         fs::write(src.path().join("manifest.json"), manifest).unwrap();
 

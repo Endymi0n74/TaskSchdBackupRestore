@@ -14,10 +14,10 @@
 # Usage :
 #   powershell -NoProfile -ExecutionPolicy Bypass -File take-gui-shots.ps1
 param(
-  [string]$App = "D:\Codex\tsbak-gui\dist\TaskBackupRestore.exe",
-  [string]$OutDir = "D:\Codex\tsbak-gui\dist\guide\shots",
-  [string]$DemoDir = "D:\Codex\tsbak-gui\dist\guide\demo\export-demo",
-  [string]$DemoPwDir = "D:\Codex\tsbak-gui\dist\guide\demo\demo-password",
+  [string]$App = "D:\Codex\TaskSchdBackupRestore\dist\TaskSchdBackupRestoreGui.exe",
+  [string]$OutDir = "D:\Codex\TaskSchdBackupRestore\dist\guide\shots",
+  [string]$DemoDir = "D:\Codex\TaskSchdBackupRestore\dist\guide\demo\export-demo",
+  [string]$DemoPwDir = "D:\Codex\TaskSchdBackupRestore\dist\guide\demo\demo-password",
   [int]$Port = 9333,
   [int]$WinW = 1140,
   [int]$WinH = 800

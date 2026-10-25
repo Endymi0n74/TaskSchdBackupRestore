@@ -534,6 +534,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "taskschdbackuprestore"
+version = "1.2.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "quick-xml",
+ "rpassword",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror",
+ "walkdir",
+ "windows",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -563,24 +581,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.119",
-]
-
-[[package]]
-name = "tsbak"
-version = "1.1.2"
-dependencies = [
- "anyhow",
- "chrono",
- "clap",
- "quick-xml",
- "rpassword",
- "serde",
- "serde_json",
- "sha2",
- "tempfile",
- "thiserror",
- "walkdir",
- "windows",
 ]
 
 [[package]]

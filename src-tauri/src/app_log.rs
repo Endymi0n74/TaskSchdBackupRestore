@@ -1,5 +1,5 @@
-//! Journalisation de Task backup and restore : un fichier horodaté par jour dans
-//! `%LOCALAPPDATA%\tsbak\logs\` (rotation journalière, rétention 14 jours),
+//! Journalisation de TaskSchdBackupRestore : un fichier horodaté par jour dans
+//! `%LOCALAPPDATA%\TaskSchdBackupRestore\logs\` (rotation journalière, rétention 14 jours),
 //! plus un anneau en mémoire (1000 lignes) servi à l'interface en temps réel.
 //!
 //! Règle de sécurité : cette API ne manipule **jamais** de mot de passe.
@@ -47,22 +47,20 @@ struct Inner {
     next_seq: u64,
 }
 
-/// Dossier de logs par défaut : `%LOCALAPPDATA%\tsbak\logs`.
-/// Repli sur `./logs` (dossier courant) si la variable est absente.
+/// Dossier de logs par défaut : `%LOCALAPPDATA%\TaskSchdBackupRestore\logs`,
+/// dérivé de [`taskschdbackuprestore::data_dir`] comme le reste des données de
+/// l'application (reprise de l'ancien dossier comprise).
 pub fn default_log_dir() -> PathBuf {
-    std::env::var("LOCALAPPDATA")
-        .map(PathBuf::from)
-        .map(|p| p.join("tsbak").join("logs"))
-        .unwrap_or_else(|_| PathBuf::from("logs"))
+    taskschdbackuprestore::data_dir().join("logs")
 }
 
-/// Supprime les fichiers `tsbak-*.log` plus vieux que `days` jours.
+/// Supprime les fichiers `TaskSchdBackupRestore-*.log` plus vieux que `days` jours.
 fn purge_old_logs(dir: &PathBuf, days: u64) {
     let cutoff = chrono::Local::now() - chrono::Duration::days(days as i64);
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let name = entry.file_name().to_string_lossy().to_string();
-            if let Some(stamp) = name.strip_prefix("tsbak-").and_then(|n| n.strip_suffix(".log")) {
+            if let Some(stamp) = name.strip_prefix("TaskSchdBackupRestore-").and_then(|n| n.strip_suffix(".log")) {
                 if let Ok(date) = chrono::NaiveDate::parse_from_str(stamp, "%Y-%m-%d") {
                     let expires = cutoff.date_naive();
                     if date < expires {
@@ -142,7 +140,7 @@ impl AppLog {
         // Rotation journalière : on ouvre le fichier du jour si besoin et on
         // purge les fichiers trop anciens à cette occasion.
         if inner.file.is_none() || inner.day != day {
-            let path = inner.dir.join(format!("tsbak-{day}.log"));
+            let path = inner.dir.join(format!("TaskSchdBackupRestore-{day}.log"));
             inner.file = OpenOptions::new().create(true).append(true).open(path).ok();
             purge_old_logs(&inner.dir, RETENTION_DAYS);
         }
@@ -250,8 +248,8 @@ mod tests {
     #[test]
     fn purge_removes_old_files() {
         let dir = tempfile::tempdir().unwrap();
-        let old = dir.path().join("tsbak-2020-01-01.log");
-        let fresh = dir.path().join("tsbak-2099-01-01.log");
+        let old = dir.path().join("TaskSchdBackupRestore-2020-01-01.log");
+        let fresh = dir.path().join("TaskSchdBackupRestore-2099-01-01.log");
         fs::write(&old, "ancien").unwrap();
         fs::write(&fresh, "récent").unwrap();
         purge_old_logs(&dir.path().to_path_buf(), RETENTION_DAYS);

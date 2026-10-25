@@ -2,8 +2,8 @@
 #  make-release.ps1 - reconstruit l'ensemble livrable d'une release
 #
 #  Depuis dist/ (binaires + assistants + guide) :
-#   1. release\tsbak-<version>-windows\   (dossier portable complet)
-#   2. release\tsbak-<version>-windows.zip (entrees en '/', Deflate)
+#   1. release\TaskSchdBackupRestore-<version>-windows\   (dossier portable complet)
+#   2. release\TaskSchdBackupRestore-<version>-windows.zip (entrees en '/', Deflate)
 #   3. empreintes SHA-256 des binaires et de l'archive
 #
 #  Idempotent : le dossier et l'archive sont reecrits a chaque
@@ -46,7 +46,7 @@ $dist = (Resolve-Path $Dist).Path
 
 # Version unique du projet (src-tauri/tauri.conf.json, cf. AGENTS.md)
 $conf = Get-Content (Join-Path $root 'src-tauri\tauri.conf.json') -Raw | ConvertFrom-Json
-$name = "tsbak-$($conf.version)-windows"
+$name = "TaskSchdBackupRestore-$($conf.version)-windows"
 $target = Join-Path $OutDir $name
 $zip = Join-Path $OutDir "$name.zip"
 
@@ -59,12 +59,12 @@ New-Item -ItemType Directory -Path $target -Force | Out-Null
 
 # --- 1. Binaires, assistants et documentation ------------------------------
 $files = @(
-    'TaskBackupRestore.exe',   # interface graphique (WebView2)
-    'tsbak.exe',               # ligne de commande (2008 R2 -> 2025+)
+    'TaskSchdBackupRestoreGui.exe',   # interface graphique (WebView2)
+    'TaskSchdBackupRestore.exe',               # ligne de commande (2008 R2 -> 2025+)
     'export.cmd',
     'import.cmd',
     'validate.cmd',
-    'Guide-tsbak.pdf',
+    'Guide-TaskSchdBackupRestore.pdf',
     'Memo-motifs.pdf',
     'LISEZMOI.txt'
 )

@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Task backup and restore — Guide d'utilisation : Export / Import des tâches planifiées</title>
+<title>TaskSchdBackupRestore — Guide d'utilisation : Export / Import des tâches planifiées</title>
 <style>
   :root {
     --primary: #1e5aa8;
@@ -148,11 +148,11 @@
 <!-- ================= COUVERTURE ================= -->
 <div class="cover">
   <div class="cover-band">
-    <h1>Task backup and restore — Guide d'utilisation</h1>
+    <h1>TaskSchdBackupRestore — Guide d'utilisation</h1>
     <p>Export et import des tâches planifiées Windows, avec l'interface graphique et la ligne de commande</p>
   </div>
   <div class="cover-meta">
-    <span class="chip">🆕 Version 1.1.2</span>
+    <span class="chip">🆕 Version 1.2.0</span>
     <span class="chip">📅 Octobre 2026</span>
     <span class="chip">🖥️ Windows Server 2008 R2 → 2025+</span>
     <span class="chip">🔐 Archive ZIP chiffrée AES-256</span>
@@ -176,8 +176,8 @@
     </ol>
   </div>
 
-  <h3>Ce que fait tsbak</h3>
-  <p>tsbak sauvegarde l'<strong>intégralité du Planificateur de tâches Windows</strong> : chaque tâche est exportée en XML brut, accompagnée d'un <code>manifest.json</code> qui contient les <strong>empreintes SHA-256</strong> de chaque fichier. L'import vérifie l'intégrité de l'archive (manifeste + empreintes), établit un <strong>plan d'import</strong> tâche par tâche (création, mise à jour, identique, conflit, bloquée), puis l'applique — avec possibilité de <strong>simulation (dry-run)</strong> sans rien écrire.</p>
+  <h3>Ce que fait TaskSchdBackupRestore</h3>
+  <p>TaskSchdBackupRestore sauvegarde l'<strong>intégralité du Planificateur de tâches Windows</strong> : chaque tâche est exportée en XML brut, accompagnée d'un <code>manifest.json</code> qui contient les <strong>empreintes SHA-256</strong> de chaque fichier. L'import vérifie l'intégrité de l'archive (manifeste + empreintes), établit un <strong>plan d'import</strong> tâche par tâche (création, mise à jour, identique, conflit, bloquée), puis l'applique — avec possibilité de <strong>simulation (dry-run)</strong> sans rien écrire.</p>
   <p>Une archive d'export est un simple dossier (XML + <code>manifest.json</code>) ou un <strong>fichier <code>.zip</code>, éventuellement chiffré AES-256</strong> : les deux formats contiennent exactement les mêmes fichiers. Il suffit de copier l'archive sur la machine cible.</p>
 </div>
 
@@ -190,13 +190,13 @@
   <tr><th>Outil</th><th>Fichier</th><th>Systèmes supportés</th><th>Utilisation</th></tr>
   <tr>
     <td><strong>Interface graphique</strong> (Tauri)</td>
-    <td><code>TaskBackupRestore.exe</code></td>
+    <td><code>TaskSchdBackupRestoreGui.exe</code></td>
     <td>Windows 10 / 11 et Server 2016 → 2025+ (WebView2 requis, préinstallé)</td>
     <td>Exploration visuelle : cases à cocher, plan interactif, mots de passe en champ masqué, journal en temps réel</td>
   </tr>
   <tr>
     <td><strong>Ligne de commande</strong></td>
-    <td><code>tsbak.exe</code></td>
+    <td><code>TaskSchdBackupRestore.exe</code></td>
     <td>Windows Server 2008 R2 → 2025+ (aucune dépendance runtime)</td>
     <td>Scripts, planification, machines anciennes, import 100 % non interactif</td>
   </tr>
@@ -208,13 +208,13 @@
   <strong>Pourquoi l'interface n'est pas disponible sur Server 2008 R2 / 2012 :</strong> l'interface repose sur WebView2, que Microsoft ne met plus à jour sur Windows 7, Server 2008 R2 et 2012 (figé en version 109, non patchée depuis octobre 2023). Pour un outil lancé en administrateur sur des serveurs de production, c'est un risque inacceptable. <strong>La ligne de commande couvre donc l'ensemble 2008 R2 → 2025+</strong>, avec le même moteur, la même vérification d'intégrité et les mêmes journaux.
 </div>
 
-<p>Les deux outils écrivent leurs journaux dans le même dossier : <code>%LOCALAPPDATA%\tsbak\logs\</code> (rotation quotidienne, conservation 14 jours). Les mots de passe n'y figurent <strong>jamais</strong>.</p>
+<p>Les deux outils écrivent leurs journaux dans le même dossier : <code>%LOCALAPPDATA%\TaskSchdBackupRestore\logs\</code> (rotation quotidienne, conservation 14 jours). Les mots de passe n'y figurent <strong>jamais</strong>.</p>
 
 <!-- ================= 2. EXPORTER (GUI) ================= -->
 <h2 class="section">2. Exporter avec l'interface graphique</h2>
 
 <ol class="steps">
-  <li><strong>Lancer TaskBackupRestore.exe</strong>, onglet <em>Tâches &amp; Export</em> (ouvert par défaut), puis cliquer <strong>« Charger les tâches »</strong>. Le Planificateur est lu et la liste s'affiche : nom, utilisateur, type de connexion. Le bandeau d'état indique le nombre de tâches trouvées et celles masquées.</li>
+  <li><strong>Lancer TaskSchdBackupRestoreGui.exe</strong>, onglet <em>Tâches &amp; Export</em> (ouvert par défaut), puis cliquer <strong>« Charger les tâches »</strong>. Le Planificateur est lu et la liste s'affiche : nom, utilisateur, type de connexion. Le bandeau d'état indique le nombre de tâches trouvées et celles masquées.</li>
   <li><strong>Sélectionner les tâches</strong> : cases à cocher, « Tout cocher », « Tout décocher ». Par défaut, les tâches <code>\Microsoft\</code> sont masquées (voir figure 1 et section 3).</li>
   <li><strong>Affiner avec les filtres</strong> (optionnel) : <em>Inclure (motifs)</em> / <em>Exclure (motifs)</em> — motifs simples avec <code>*</code>, ex. <code>\Microsoft\*</code> pour exclure tout un dossier.</li>
   <li><strong>Choisir le format</strong> :
@@ -432,7 +432,7 @@
 <!-- ================= 5. LOGS ================= -->
 <h2 class="section">5. Consulter les journaux (onglet Logs)</h2>
 
-<p>L'onglet <strong>Logs</strong> affiche le journal du jour en temps réel. Chaque action (chargement, export, extraction ZIP, validation, plan, simulation, import) y est consignée avec horodatage. Le dossier des journaux est ouvrable d'un clic : <code>%LOCALAPPDATA%\tsbak\logs\</code> — un fichier par jour (<code>tsbak-AAAA-MM-JJ.log</code>), rétention 14 jours. La ligne de commande écrit dans le même dossier.</p>
+<p>L'onglet <strong>Logs</strong> affiche le journal du jour en temps réel. Chaque action (chargement, export, extraction ZIP, validation, plan, simulation, import) y est consignée avec horodatage. Le dossier des journaux est ouvrable d'un clic : <code>%LOCALAPPDATA%\TaskSchdBackupRestore\logs\</code> — un fichier par jour (<code>TaskSchdBackupRestore-AAAA-MM-JJ.log</code>), rétention 14 jours. La ligne de commande écrit dans le même dossier.</p>
 
 <figure>
   <div class="shot">
@@ -457,23 +457,23 @@
 
 <h3>6.1. Lister</h3>
 <pre><code><span class="c">:: inventaire lisible (sous-dossiers compris), sans les tâches Microsoft</span>
-tsbak.exe list --recursive --hide-microsoft</code></pre>
+TaskSchdBackupRestore.exe list --recursive --hide-microsoft</code></pre>
 
 <h3>6.2. Exporter</h3>
 <pre><code><span class="c">:: cas 1 — exporte TOUTES les tâches vers un dossier (XML + manifest.json)</span>
-tsbak.exe export D:\sauvegardes\export-2026-10-07
+TaskSchdBackupRestore.exe export D:\sauvegardes\export-2026-10-07
 
 <span class="c">:: cas 2 — tout sauf les tâches système \Microsoft\ (comme la case de l'interface)</span>
-tsbak.exe export D:\sauvegardes\export-2026-10-07 --hide-microsoft
+TaskSchdBackupRestore.exe export D:\sauvegardes\export-2026-10-07 --hide-microsoft
 
 <span class="c">:: cas 3 — seulement ce que contient \Backup\</span>
-tsbak.exe export D:\sauvegardes\export-2026-10-07 --include "\Backup\*"
+TaskSchdBackupRestore.exe export D:\sauvegardes\export-2026-10-07 --include "\Backup\*"
 
 <span class="c">:: cas 4 — un dossier précis, en retirant les tâches Microsoft éventuelles</span>
-tsbak.exe export D:\sauvegardes\export-2026-10-07 --include "\Backup\*" --exclude "\Microsoft\*"
+TaskSchdBackupRestore.exe export D:\sauvegardes\export-2026-10-07 --include "\Backup\*" --exclude "\Microsoft\*"
 
 <span class="c">:: cas 5 — motif exact (une seule tâche)</span>
-tsbak.exe export D:\sauvegardes\export-2026-10-07 --include "\MSIAfterburner"</code></pre>
+TaskSchdBackupRestore.exe export D:\sauvegardes\export-2026-10-07 --include "\MSIAfterburner"</code></pre>
 
 <div class="callout info">
   <strong>Rappel (voir section 3) :</strong> si <code>--include</code> est fourni, seule une tâche dont le chemin correspond à au moins un motif est candidate ; ensuite toute tâche correspondant à un <code>--exclude</code> est retirée. Les motifs utilisent <code>*</code> et sont insensibles à la casse.
@@ -493,13 +493,13 @@ tsbak.exe export D:\sauvegardes\export-2026-10-07 --include "\MSIAfterburner"</c
 
 <h3>6.3. Valider puis importer</h3>
 <pre><code><span class="c">:: 1. vérifier l'intégrité de l'archive (manifeste + empreintes + XML)</span>
-tsbak.exe validate D:\sauvegardes\export-2026-10-07
+TaskSchdBackupRestore.exe validate D:\sauvegardes\export-2026-10-07
 
 <span class="c">:: 2. simuler (dry-run) : rien n'est écrit, rapport complet</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --dry-run
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --dry-run
 
 <span class="c">:: 3. importer réellement</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07</code></pre>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07</code></pre>
 
 <figure>
   <div class="shot">
@@ -520,7 +520,7 @@ tsbak.exe import D:\sauvegardes\export-2026-10-07</code></pre>
 <!-- ================= 7. ASSISTANTS CMD (2008 R2/2012) ================= -->
 <h2 class="section">7. Serveurs 2008 R2 / 2012 — les assistants .cmd</h2>
 
-<p>Sur les serveurs sans interface graphique (Server 2008 R2, 2012, 2012 R2 — ou par simple habitude), le dossier <code>dist\</code> contient trois assistants prêts à l'emploi : <code>export.cmd</code>, <code>validate.cmd</code> et <code>import.cmd</code>. Écrits en cmd compatible 2008 R2 (ASCII + CRLF), ils posent des questions guidées, exécutent <code>tsbak.exe</code> et conservent un <strong>journal horodaté dans <code>dist\logs\</code></strong> (en plus du journal partagé <code>%LOCALAPPDATA%\tsbak\logs\</code>).</p>
+<p>Sur les serveurs sans interface graphique (Server 2008 R2, 2012, 2012 R2 — ou par simple habitude), le dossier <code>dist\</code> contient trois assistants prêts à l'emploi : <code>export.cmd</code>, <code>validate.cmd</code> et <code>import.cmd</code>. Écrits en cmd compatible 2008 R2 (ASCII + CRLF), ils posent des questions guidées, exécutent <code>TaskSchdBackupRestore.exe</code> et conservent un <strong>journal horodaté dans <code>dist\logs\</code></strong> (en plus du journal partagé <code>%LOCALAPPDATA%\TaskSchdBackupRestore\logs\</code>).</p>
 
 <div class="callout warn">
   <strong>Administrateur :</strong> double-clic sur <code>validate.cmd</code> et <code>export.cmd</code> suffit. <code>import.cmd</code> doit être lancé <strong>en administrateur</strong> (clic droit → <em>Exécuter en tant qu'administrateur</em>) pour écrire dans le Planificateur — sans cela, l'import s'arrête sur une erreur d'accès.
@@ -546,7 +546,7 @@ tsbak.exe import D:\sauvegardes\export-2026-10-07</code></pre>
 <h3>7.2. Exporter — <code>export.cmd</code></h3>
 <ol class="steps">
   <li>Double-cliquer sur <code>export.cmd</code>. (Clic droit → <em>Exécuter en tant qu'administrateur</em> si des tâches d'autres comptes doivent aussi être exportées.)</li>
-  <li>Saisir le dossier d'export, ex. <code>D:\tsbak\export-2026-10-07</code>.</li>
+  <li>Saisir le dossier d'export, ex. <code>D:\TaskSchdBackupRestore\export-2026-10-07</code>.</li>
   <li>L'assistant exporte <strong>toutes</strong> les tâches (XML + manifest.json), lance automatiquement la <strong>vérification d'intégrité</strong>, puis affiche « OK. Archive pret a etre copiee / importee ailleurs. »</li>
   <li>Journal horodaté dans <code>dist\logs\export-AAAA-MM-JJ-HHMMSS.log</code>.</li>
 </ol>
@@ -601,34 +601,34 @@ tsbak.exe import D:\sauvegardes\export-2026-10-07</code></pre>
 <h3>Restauration dans un dossier spécifique (<code>--folder</code>)</h3>
 <p>Le dossier cible préfixe chaque tâche en préservant la structure d'origine — idéal pour une restauration « à côté » sans écraser l'existant, ou pour isoler une reprise sur un serveur.</p>
 <pre><code><span class="c">:: chaque tâche sera créée sous \Restauration-2026\... (structure d'origine conservée)</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --folder "\Restauration-2026" --dry-run
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --folder "\Restauration-2026" --dry-run
 
 <span class="c">:: la simulation confirme : CREATE \Restauration-2026\Backup\Nightly</span></code></pre>
 
 <h3>Comptes et mots de passe</h3>
 <p>Un compte qui n'est ni un compte système bien connu (SYSTEM, LOCAL SERVICE…) ni mappé explicitement bloque la tâche (badge <span class="badge b-purple">Utilisateur non mappé</span>, figure 8 en CLI) ; un type de connexion « Mot de passe » exige le secret du compte (badge <span class="badge b-red">Mot de passe requis</span>). Dans l'interface, ce sont la colonne <em>Résolution</em> et le <strong>« Mot de passe unique »</strong> (4.1) ; en ligne de commande :</p>
 <pre><code><span class="c">:: mapper un utilisateur source vers un compte de la machine cible (répétable)</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --user-map "OLDPC\svc_backup:NEWPC\svc_backup"
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --user-map "OLDPC\svc_backup:NEWPC\svc_backup"
 
 <span class="c">:: fournir les mots de passe dans un fichier "utilisateur=mot_de_passe" (un par ligne)</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --user-map "OLDPC\svc_backup:NEWPC\svc_backup" --password-file mdp.txt
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --user-map "OLDPC\svc_backup:NEWPC\svc_backup" --password-file mdp.txt
 
 <span class="c">:: ignorer (sans bloquer) les tâches dont le mot de passe n'est pas fourni</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --skip-password-tasks</code></pre>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --skip-password-tasks</code></pre>
 
 <h3>Conflits et import 100 % non interactif (scripts / planification)</h3>
 <pre><code><span class="c">:: résoudre d'avance tous les conflits : tâche déjà présente et différente</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --conflict-policy overwrite   <span class="c">:: écraser</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --conflict-policy skip        <span class="c">:: conserver l'existant</span>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --conflict-policy overwrite   <span class="c">:: écraser</span>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --conflict-policy skip        <span class="c">:: conserver l'existant</span>
 
 <span class="c">:: réponses "oui" par défaut + fichier de réponses JSON (chemins, mapping, mots de passe)</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --yes --answer-file reponses.json
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --yes --answer-file reponses.json
 
 <span class="c">:: forcer les questions sur un terminal même avec un fichier de réponses</span>
-tsbak.exe import D:\sauvegardes\export-2026-10-07 --interactive</code></pre>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --interactive</code></pre>
 
 <div class="callout info">
-  <strong>Automatisation :</strong> la ligne de commande se planifie elle-même (ex. <code>schtasks /create /sc weekly /tn "tsbak-import" /tr "D:\tsbak\import.cmd" /ru SYSTEM</code>) pour restaurer périodiquement des sauvegardes sur un serveur de secours. En mode non interactif, prévoir <code>--yes</code>, <code>--conflict-policy</code>, <code>--user-map</code> et <code>--password-file</code> pour que rien ne reste bloqué. Le fichier de réponses accepte aussi <code>action_overrides</code> (programme, arguments et dossier de démarrage réécrits avant import — voir 4.2).
+  <strong>Automatisation :</strong> la ligne de commande se planifie elle-même (ex. <code>schtasks /create /sc weekly /tn "TaskSchdBackupRestore-import" /tr "D:\TaskSchdBackupRestore\import.cmd" /ru SYSTEM</code>) pour restaurer périodiquement des sauvegardes sur un serveur de secours. En mode non interactif, prévoir <code>--yes</code>, <code>--conflict-policy</code>, <code>--user-map</code> et <code>--password-file</code> pour que rien ne reste bloqué. Le fichier de réponses accepte aussi <code>action_overrides</code> (programme, arguments et dossier de démarrage réécrits avant import — voir 4.2).
 </div>
 
 <!-- ================= 9. SECURITE ================= -->
@@ -647,20 +647,20 @@ tsbak.exe import D:\sauvegardes\export-2026-10-07 --interactive</code></pre>
 
 <table class="tbl">
   <tr><th>Symptôme</th><th>Cause / solution</th></tr>
-  <tr><td>L'interface ne démarre pas sur Server 2008 R2 / 2012</td><td>WebView2 n'y est plus mis à jour → utiliser <code>tsbak.exe</code> (CLI) ou les <code>.cmd</code> du dossier <code>dist\</code>.</td></tr>
+  <tr><td>L'interface ne démarre pas sur Server 2008 R2 / 2012</td><td>WebView2 n'y est plus mis à jour → utiliser <code>TaskSchdBackupRestore.exe</code> (CLI) ou les <code>.cmd</code> du dossier <code>dist\</code>.</td></tr>
   <tr><td>La liste des tâches est vide ou incomplète</td><td>La case <strong>« Masquer les tâches Microsoft »</strong> est cochée par défaut → la décocher pour afficher les <code>\Microsoft\</code> ; le bandeau d'état indique le nombre masqué.</td></tr>
   <tr><td>« Utilisateur non mappé » / tâche bloquée au plan</td><td>Le compte source n'est pas reconnu sur la cible → GUI : colonne <em>Résolution</em> du plan puis « Re-planifier » ; CLI : <code>--user-map "source:cible"</code>.</td></tr>
   <tr><td>« Mot de passe requis »</td><td>Fournir le mot de passe de ce compte : champ masqué de la ligne, ou bouton <strong>« Remplir avec le même mot de passe »</strong> quand plusieurs tâches sont concernées (4.1) ; en CLI, <code>--password-file</code>. <code>--skip-password-tasks</code> ignore ces tâches au lieu de bloquer l'import.</td></tr>
   <tr><td>Archive refusée à la validation</td><td>Manifeste, empreinte ou XML altéré / incomplet → réexporter proprement ; ne pas modifier les fichiers à la main.</td></tr>
   <tr><td>Archive .zip chiffrée illisible</td><td>Vérifier le mot de passe ; le format AES-256 est standard (7-Zip/WinZip le lisent).</td></tr>
-  <tr><td>« Échec » à l'import réel</td><td>Lancer en administrateur (UAC) ; consulter <code>%LOCALAPPDATA%\tsbak\logs\</code> pour le détail.</td></tr>
+  <tr><td>« Échec » à l'import réel</td><td>Lancer en administrateur (UAC) ; consulter <code>%LOCALAPPDATA%\TaskSchdBackupRestore\logs\</code> pour le détail.</td></tr>
   <tr><td>Conflit : la tâche existe déjà et diffère</td><td>GUI : choisir « Mettre à jour » ou « Conserver l'existante » dans la colonne <em>Résolution</em> ; CLI : <code>--conflict-policy overwrite|skip</code> ; ou restaurer sous un <code>--folder</code> dédié.</td></tr>
   <tr><td>Tâche restaurée mais le script ne se lance pas (chemin introuvable)</td><td>Les chemins pointent encore vers la machine source (lecteur absent, partage UNC) → <strong>« Modifier l'action… »</strong> de la ligne concernée avant l'import (4.2), ou <code>action_overrides</code> du fichier de réponses en CLI.</td></tr>
 </table>
 
 <div class="footer-note">
-  tsbak v1.1.2 — Guide illustré : captures réalisées le 7 octobre 2026 sur Windows 11 (interface WebView2 et console Windows).
-  Binaires : <code>dist\TaskBackupRestore.exe</code> (interface, Windows 10/11 et Server 2016 → 2025+) et <code>dist\tsbak.exe</code> (CLI, Server 2008 R2 → 2025+).
+  TaskSchdBackupRestore v1.2.0 — Guide illustré : captures réalisées le 7 octobre 2026 sur Windows 11 (interface WebView2 et console Windows).
+  Binaires : <code>dist\TaskSchdBackupRestoreGui.exe</code> (interface, Windows 10/11 et Server 2016 → 2025+) et <code>dist\TaskSchdBackupRestore.exe</code> (CLI, Server 2008 R2 → 2025+).
 </div>
 
 </body>

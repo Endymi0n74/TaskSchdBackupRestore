@@ -9,7 +9,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use crate::action::ActionOverride;
-use crate::error::{Result, TsbakError};
+use crate::error::{Result, BackupError};
 use crate::model::ConflictPolicy;
 
 /// Contenu structure d'un fichier de reponses, permettant un import
@@ -58,12 +58,12 @@ impl From<ConflictDecision> for ConflictPolicy {
 impl AnswerFile {
     /// Charge et parse un fichier de reponses JSON depuis le disque.
     pub fn load(path: &Path) -> Result<Self> {
-        let content = std::fs::read_to_string(path).map_err(|e| TsbakError::Io {
+        let content = std::fs::read_to_string(path).map_err(|e| BackupError::Io {
             path: path.display().to_string(),
             source: e,
         })?;
         serde_json::from_str(&content)
-            .map_err(|e| TsbakError::Other(format!("fichier de reponses invalide: {e}")))
+            .map_err(|e| BackupError::Other(format!("fichier de reponses invalide: {e}")))
     }
 }
 
@@ -72,7 +72,7 @@ pub fn parse_user_map(entries: &[String]) -> Result<HashMap<String, String>> {
     let mut map = HashMap::new();
     for entry in entries {
         let (src, dest) = entry.split_once(':').ok_or_else(|| {
-            TsbakError::Other(format!(
+            BackupError::Other(format!(
                 "mapping utilisateur invalide '{entry}', format attendu 'src:dest'"
             ))
         })?;
