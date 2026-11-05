@@ -5,7 +5,7 @@
    binaires publiés (TaskSchdBackupRestoreGui.exe) et c'est le thème actif
    par défaut de ui/index.html.
 
-   Bascule : tools\select-theme.ps1 -Action Set -Theme hestia|legacy
+   Bascule : tools\select-theme.ps1 -Action Set -Theme navy|legacy
    L'assemblage d'une release refuse de partir si la variante locale
    est active (voir tools\make-release.ps1).
    ============================================================ */

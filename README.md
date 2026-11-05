@@ -146,7 +146,7 @@ TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dr
 :: 4. Importer réellement (en administrateur)
 TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ::    Options utiles :
-::    --folder \Hestia                   restaure les tâches directement dans ce dossier
+::    --folder \Archive                   restaure les tâches directement dans ce dossier
 ::    --undo-dir C:\TaskSchdBackupRestore\undo          copies des tâches écrasées (réimportables)
 ::    --password-file mdp.txt            mots de passe (DOMAINE\user=motdepasse, 1/ligne)
 ::    --user-map OLDPC\user:NEWPC\user   remplace un compte source par un compte cible
@@ -181,11 +181,11 @@ palettes vivent dans `ui/themes/` et `ui/index.html` n'en active qu'une :
 | Feuillet | Rôle |
 |---|---|
 | [`ui/themes/legacy.css`](ui/themes/legacy.css) | **thème publié** — palette historique, active par défaut |
-| [`ui/themes/hestia.css`](ui/themes/hestia.css) | variante locale (bleu marine / orange), non publiée |
+| [`ui/themes/navy.css`](ui/themes/navy.css) | variante locale (bleu marine / orange), non publiée |
 
 ```powershell
 # Variante locale dans l'interface (puis recompiler pour l'embarquer)
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\select-theme.ps1 -Action Set -Theme hestia
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\select-theme.ps1 -Action Set -Theme navy
 
 # Thème actif
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\select-theme.ps1 -Action Status
@@ -245,7 +245,7 @@ cargo test e2e_export_zip_aes_then_reimport -- --ignored --nocapture
 |---|---|
 | `engine/` | Crate Rust du moteur + CLI `TaskSchdBackupRestore.exe` (`scheduler/`, `export.rs`, `import.rs`, `action.rs`, `password.rs`, `answers.rs`, `wizard.rs`) |
 | `src-tauri/` | Application Tauri 2 : commandes (`commands.rs`), archives ZIP/AES (`archive.rs`), helper d'élévation (`helper.rs`), logs (`app_log.rs`) |
-| `ui/` | Frontend statique HTML/CSS/JS (sans framework) ; palettes dans `ui/themes/` (`legacy` = publié, `hestia` = variante locale) |
+| `ui/` | Frontend statique HTML/CSS/JS (sans framework) ; palettes dans `ui/themes/` (`legacy` = publié, `navy` = variante locale) |
 | `dist/` | Livraison : `TaskSchdBackupRestoreGui.exe`, `TaskSchdBackupRestore.exe`, assistants `.cmd`, `Guide-TaskSchdBackupRestore.pdf` + `Memo-motifs.pdf` + sources du guide (`guide/`, captures et scripts) |
 | `tools/` | Scripts de maintenance : générateur d'icône (`make_icon.py`), assemblage des artefacts de release (`make-release.ps1`), thème de l'interface (`select-theme.ps1`), fraîcheur et régénération du guide PDF (`guide-pdf.ps1`) |
 | `.github/workflows/` | Intégration continue : `ci.yml` (tests des deux crates à chaque *push*), `guide-pdf.yml` (guide PDF régénéré et contrôlé) |

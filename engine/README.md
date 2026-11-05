@@ -184,10 +184,10 @@ TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 
 Options frequentes :
 
-- `--folder \Hestia` : restaure chaque tache **directement dans ce dossier**
+- `--folder \Archive` : restaure chaque tache **directement dans ce dossier**
   du planificateur, sans recopier son emplacement d'origine
-  (`\Microsoft\Tache` -> `\Hestia\Tache`), ce qui evite d'imbriquer
-  `\Hestia\Microsoft\` ;
+  (`\Microsoft\Tache` -> `\Archive\Tache`), ce qui evite d'imbriquer
+  `\Archive\Microsoft\` ;
 - `--password-file mdp.txt` : fournit les mots de passe des comptes
   (`DOMAINE\user=motdepasse`, un par ligne) ;
 - `--user-map OLDPC\user:NEWPC\user` : remplace un compte source par un

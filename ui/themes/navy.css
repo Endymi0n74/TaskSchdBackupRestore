@@ -1,5 +1,5 @@
 /* ============================================================
-   Thème Hestia — bleu marine / orange (variante locale, non publiée)
+   Thème navy — bleu marine / orange (variante locale, non publiée)
 
    Palette : navy #162E67 (structure) + orange #F9A800 (actions).
    Ce feuillet ne remplace pas ui/style.css : il en surcharge la
@@ -7,7 +7,7 @@
    variante change l'aspect. ui/style.css reste donc le thème publié,
    intact.
 
-   Activation : tools\select-theme.ps1 -Action Set -Theme hestia
+   Activation : tools\select-theme.ps1 -Action Set -Theme navy
    Désactivation : tools\select-theme.ps1 -Action Set -Theme legacy
    Le livrable publié (tools\make-release.ps1) exige le thème legacy.
    ============================================================ */
@@ -155,7 +155,7 @@ input[type="checkbox"] { accent-color: var(--primary); }
   opacity: 1;
 }
 
-/* Action principale : orange Hestia, texte marine. */
+/* Action principale : orange du thème, texte marine. */
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--primary); }
 .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 

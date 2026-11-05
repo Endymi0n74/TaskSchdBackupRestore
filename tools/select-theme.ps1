@@ -3,7 +3,7 @@
 #
 #  ui/index.html charge deux feuillets de palette :
 #    ui/themes/legacy.css   theme publie (palette historique)
-#    ui/themes/hestia.css   variante locale (bleu marine / orange)
+#    ui/themes/navy.css   variante locale (bleu marine / orange)
 #  Seul le feuillet sans media="not all" s'applique : ce script ne
 #  bascule que cet attribut. ui/style.css (structure et composants)
 #  reste commun aux deux themes, et le binaire embarque le theme
@@ -14,19 +14,19 @@
 #
 #  Actions :
 #    -Action Status  (defaut) affiche le theme actif ;
-#    -Action Set     -Theme legacy|hestia  bascule (idempotent) ;
-#    -Action Check   -Require legacy|hestia [-ErrorOnStale]  controle
+#    -Action Set     -Theme legacy|navy  bascule (idempotent) ;
+#    -Action Check   -Require legacy|navy [-ErrorOnStale]  controle
 #                    sans rien ecrire ; code de sortie 4 si le theme
 #                    requis n'est pas actif (et -ErrorOnStale present).
 #
 #  Usage :  powershell -NoProfile -ExecutionPolicy Bypass `
-#                         -File tools\select-theme.ps1 -Action Set -Theme hestia
+#                         -File tools\select-theme.ps1 -Action Set -Theme navy
 # ============================================================
 [CmdletBinding()]
 param(
     [ValidateSet('Status', 'Set', 'Check')][string]$Action = 'Status',
-    [ValidateSet('legacy', 'hestia')][string]$Theme,
-    [ValidateSet('legacy', 'hestia')][string]$Require = 'legacy',
+    [ValidateSet('legacy', 'navy')][string]$Theme,
+    [ValidateSet('legacy', 'navy')][string]$Require = 'legacy',
     [switch]$ErrorOnStale
 )
 
@@ -34,7 +34,7 @@ $ErrorActionPreference = 'Stop'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $index = Join-Path $root 'ui\index.html'
-$themes = @('legacy', 'hestia')
+$themes = @('legacy', 'navy')
 $inactif = 'media="not all"'
 
 $texte = [System.IO.File]::ReadAllText($index)
@@ -81,7 +81,7 @@ switch ($Action) {
     }
 
     'Set' {
-        if (-not $Theme) { throw "-Theme est obligatoire avec -Action Set (legacy ou hestia)." }
+        if (-not $Theme) { throw "-Theme est obligatoire avec -Action Set (legacy ou navy)." }
         $feuillet = Join-Path $root ("ui\themes\{0}.css" -f $Theme)
         if (-not (Test-Path $feuillet)) { throw ("Feuillet de theme introuvable : {0}." -f $feuillet) }
 

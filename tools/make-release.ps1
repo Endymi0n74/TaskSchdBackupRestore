@@ -32,7 +32,7 @@ if (-not $OutDir) { $OutDir = Join-Path $root 'release' }
 $global:LASTEXITCODE = 0
 & (Join-Path $PSScriptRoot 'select-theme.ps1') -Action Check -Require legacy -ErrorOnStale
 if ($LASTEXITCODE -eq 4) {
-    Write-Host "Arret : le theme local 'hestia' est actif dans ui\index.html."
+    Write-Host "Arret : le theme local 'navy' est actif dans ui\index.html."
     Write-Host "  Lancer tools\select-theme.ps1 -Action Set -Theme legacy, recompiler"
     Write-Host "  l'interface, puis relancer ce script : la variante ne doit pas etre livree."
     exit 1

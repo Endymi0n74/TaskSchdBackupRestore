@@ -5,9 +5,9 @@
    --primary, ...) sont fournies par le thème actif, chargé par
    ui/index.html, et une variante peut surcharger les règles ci-dessous :
      - ui/themes/legacy.css  : thème publié (palette historique) ;
-     - ui/themes/hestia.css  : variante locale, surcharge de ce fichier.
+     - ui/themes/navy.css  : variante locale, surcharge de ce fichier.
 
-   Bascule : tools\select-theme.ps1 -Action Set -Theme hestia|legacy
+   Bascule : tools\select-theme.ps1 -Action Set -Theme navy|legacy
    ============================================================ */
 
 * { box-sizing: border-box; }
