@@ -234,7 +234,7 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   une par une en CLI, export de 173 tâches revalidé après chaque correctif, ligne de l'import
   élevé relue par `CommandLineToArgvW` **et** par un lancement réel, e2e `#[ignore]` rejoué.
 
-- **2026-11-05 (retrait du nom « Hestia »)** — Le nom de marque disparaît du produit et
+- **2026-11-05 (retrait du nom de marque)** — Le nom de marque disparaît du produit et
   du dépôt : exemples de dossier cible `\Archive`, thème local renommé `ui/themes/navy.css`
   (`-Theme navy|legacy`, `select-theme.ps1`, `make-release.ps1`, README FR/EN, AGENTS,
   CHANGELOG, guide HTML et PDF, mémoire). Démo du guide renommée
