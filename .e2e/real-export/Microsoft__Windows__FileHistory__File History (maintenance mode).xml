@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <Date>2010-08-12T00:00:00</Date>
+    <SecurityDescriptor>D:(A;OICI;FA;;;BA)(A;OICI;FA;;;SY)(A;OICI;FRFX;;;LS)(A;OICI;FRFX;;;AU)</SecurityDescriptor>
+    <Source>$(@%systemRoot%\system32\fhtask.dll,-200)</Source>
+    <Author>$(@%systemRoot%\system32\fhtask.dll,-201)</Author>
+    <Description>$(@%systemRoot%\system32\fhtask.dll,-202)</Description>
+    <URI>\Microsoft\Windows\FileHistory\File History (maintenance mode)</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalService">
+      <UserId>S-1-5-19</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P3D</Period>
+      <Deadline>P7D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="LocalService">
+    <ComHandler>
+      <ClassId>{89917B7C-A1A6-11DF-8BF6-18A90531A85A}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

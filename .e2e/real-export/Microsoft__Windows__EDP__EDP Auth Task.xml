@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:P(A;;FRFX;;;AU)(A;;FA;;;SY)</SecurityDescriptor>
+    <URI>\Microsoft\Windows\EDP\EDP Auth Task</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-4</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger>
+      <StateName>7538BCA3280A9641</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{61BCD1B9-340C-40EC-9D41-D7F1C0632F05}</ClassId>
+      <Data><![CDATA[ReAuth]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

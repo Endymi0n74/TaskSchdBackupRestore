@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;CI;FA;;;LS)(A;CI;FA;;;S-1-5-80-2078495744-2416903469-4072184685-3943858305-976987417)</SecurityDescriptor>
+    <Source>$(@%systemroot%\system32\appidsvc.dll,-200)</Source>
+    <Author>$(@%systemroot%\system32\appidsvc.dll,-201)</Author>
+    <Description>$(@%systemroot%\system32\appidsvc.dll,-202)</Description>
+    <URI>\Microsoft\Windows\AppID\VerifiedPublisherCertStoreCheck</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalService">
+      <UserId>S-1-5-19</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <MultipleInstancesPolicy>Queue</MultipleInstancesPolicy>
+    <Priority>10</Priority>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfIdle>true</RunOnlyIfIdle>
+    <IdleSettings>
+      <Duration>PT3M</Duration>
+      <WaitTimeout>PT23H</WaitTimeout>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>true</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <BootTrigger>
+      <Delay>PT30M</Delay>
+      <Repetition>
+        <Interval>P1D</Interval>
+      </Repetition>
+    </BootTrigger>
+  </Triggers>
+  <Actions Context="LocalService">
+    <Exec>
+      <Command>%windir%\system32\appidcertstorecheck.exe</Command>
+    </Exec>
+  </Actions>
+</Task>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <SecurityDescriptor>D:P(A;;FA;;;BA)(A;;FA;;;SY)(A;;FRFW;;;IU)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\system32\dimsjob.dll,-100)</Source>
+    <Author>$(@%SystemRoot%\system32\dimsjob.dll,-101)</Author>
+    <Description>$(@%SystemRoot%\system32\dimsjob.dll,-102)</Description>
+    <URI>\Microsoft\Windows\CertificateServicesClient\UserTask-Roam</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="InteractiveUsers">
+      <GroupId>S-1-5-4</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
+    <RestartOnFailure>
+      <Count>5</Count>
+      <Interval>PT1M</Interval>
+    </RestartOnFailure>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <SessionStateChangeTrigger>
+      <StateChange>SessionLock</StateChange>
+    </SessionStateChangeTrigger>
+    <SessionStateChangeTrigger>
+      <StateChange>SessionUnlock</StateChange>
+    </SessionStateChangeTrigger>
+  </Triggers>
+  <Actions Context="InteractiveUsers">
+    <ComHandler>
+      <ClassId>{58FB76B9-AC85-4E55-AC04-427593B1D060}</ClassId>
+      <Data><![CDATA[KEYROAMING]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

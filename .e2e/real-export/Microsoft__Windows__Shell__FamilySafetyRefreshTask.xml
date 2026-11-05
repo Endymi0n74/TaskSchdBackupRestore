@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;OICI;FA;;;BA)(A;OICI;FA;;;LA)(A;OICI;FA;;;SY)(A;OICI;FRFX;;;AU)(A;;FRFX;;;LS)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\System32\WpcRefreshTask.dll,-32010)</Source>
+    <Author>$(@%SystemRoot%\System32\WpcRefreshTask.dll,-32011)</Author>
+    <Description>$(@%SystemRoot%\System32\WpcRefreshTask.dll,-32012)</Description>
+    <URI>\Microsoft\Windows\Shell\FamilySafetyRefreshTask</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="System">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT10M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Queue</MultipleInstancesPolicy>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger>
+      <StateName>7508BCA33A089541</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="System">
+    <ComHandler>
+      <ClassId>{C844C79D-AED8-4DCE-AB25-4D359BED84F8}</ClassId>
+      <Data><![CDATA[$(Arg0)]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

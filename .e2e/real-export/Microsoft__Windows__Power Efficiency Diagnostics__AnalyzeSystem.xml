@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <SecurityDescriptor>D:(A;OICI;FA;;;BA)(A;OICI;FA;;;SY)(A;OICI;GR;;;AU)(A;;FRFX;;;LS)</SecurityDescriptor>
+    <Source>$(@%systemRoot%\system32\energytask.dll,-601)</Source>
+    <Author>$(@%systemRoot%\system32\energytask.dll,-600)</Author>
+    <Description>$(@%systemRoot%\system32\energytask.dll,-602)</Description>
+    <URI>\Microsoft\Windows\Power Efficiency Diagnostics\AnalyzeSystem</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystemAccount">
+      <UserId>S-1-5-18</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT5M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P1D</Period>
+      <Deadline>P2D</Deadline>
+      <Exclusive>true</Exclusive>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="LocalSystemAccount">
+    <ComHandler>
+      <ClassId>{927EA2AF-1C54-43D5-825E-0074CE028EEE}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

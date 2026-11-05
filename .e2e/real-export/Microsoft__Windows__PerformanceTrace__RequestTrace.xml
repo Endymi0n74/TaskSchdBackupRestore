@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Source>$(@%SystemRoot%\system32\PerformanceTraceHandler.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\PerformanceTraceHandler.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\PerformanceTraceHandler.dll,-602)</Description>
+    <URI>\Microsoft\Windows\PerformanceTrace\RequestTrace</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-4</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <Priority>1</Priority>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger id="WNF_SHEL_TRACE_REQUESTED">
+      <StateName>75F0B8A33E06830D</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{9EFEB182-2EE3-4AF9-AFFA-521410D110D1}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

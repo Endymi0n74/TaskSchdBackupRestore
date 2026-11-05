@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:AI(A;;FA;;;NS)(A;;GA;;;SY)(A;ID;FA;;;BA)(A;ID;GRGX;;;AU)</SecurityDescriptor>
+    <Description>$(@%SystemRoot%\system32\dsregcmd.exe,-102)</Description>
+    <URI>\Microsoft\Windows\Workplace Join\Recovery-Check</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="InteractiveUsers">
+      <GroupId>S-1-5-4</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <ExecutionTimeLimit>PT2H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Queue</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <LogonTrigger />
+    <SessionStateChangeTrigger>
+      <StateChange>SessionLock</StateChange>
+    </SessionStateChangeTrigger>
+  </Triggers>
+  <Actions Context="InteractiveUsers">
+    <Exec>
+      <Command>%SystemRoot%\System32\dsregcmd.exe</Command>
+      <Arguments>/checkrecovery</Arguments>
+    </Exec>
+  </Actions>
+</Task>

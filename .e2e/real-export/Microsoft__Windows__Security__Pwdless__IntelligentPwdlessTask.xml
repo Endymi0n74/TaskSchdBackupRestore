@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:P(A;;KA;;;BA)(A;;FA;;;SY)(A;;KRKX;;;WD)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\system32\IntelligentPwdlessTask.dll,-101)</Source>
+    <Author>$(@%SystemRoot%\system32\IntelligentPwdlessTask.dll,-100)</Author>
+    <Description>$(@%SystemRoot%\system32\IntelligentPwdlessTask.dll,-102)</Description>
+    <URI>\Microsoft\Windows\Security\Pwdless\IntelligentPwdlessTask</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT10M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P1D</Period>
+      <Deadline>P2D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2021-08-01T03:00:00</StartBoundary>
+      <ExecutionTimeLimit>PT12H</ExecutionTimeLimit>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <ComHandler>
+      <ClassId>{8702A841-D5CA-47C3-812D-9CEDC304C200}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

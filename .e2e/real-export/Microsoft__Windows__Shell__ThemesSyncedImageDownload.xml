@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Source>$(@%SystemRoot%\system32\Themes.SsfDownload.ScheduledTask.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\Themes.SsfDownload.ScheduledTask.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\Themes.SsfDownload.ScheduledTask.dll,-602)</Description>
+    <URI>\Microsoft\Windows\Shell\ThemesSyncedImageDownload</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-32-545</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <RunOnlyIfIdle>true</RunOnlyIfIdle>
+    <IdleSettings>
+      <Duration>PT10M</Duration>
+      <WaitTimeout>PT1H</WaitTimeout>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P1D</Period>
+      <Deadline>P7D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{79F8E185-4E45-4B74-8182-02AA430661E4}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

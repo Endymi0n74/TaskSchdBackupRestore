@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:P(A;;FA;;;AU)(A;;FA;;;SY)</SecurityDescriptor>
+    <URI>\Microsoft\Windows\Printing\PrinterCleanupTask</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="InteractiveUsers">
+      <GroupId>S-1-5-4</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <RestartOnFailure>
+      <Count>1</Count>
+      <Interval>PT1H</Interval>
+    </RestartOnFailure>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2020-01-01T12:00:00</StartBoundary>
+      <ScheduleByDay>
+        <DaysInterval>30</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Actions Context="InteractiveUsers">
+    <ComHandler>
+      <ClassId>{C56F065E-DE49-4E42-BE7C-305C45609D25}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

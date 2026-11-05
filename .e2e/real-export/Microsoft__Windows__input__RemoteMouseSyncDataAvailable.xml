@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;;FA;;;AU)(A;;FA;;;BA)(A;;FA;;;SY)</SecurityDescriptor>
+    <URI>\Microsoft\Windows\input\RemoteMouseSyncDataAvailable</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-4</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <Priority>6</Priority>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger>
+      <StateName>7538BCA324009615</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{378EAB97-EFD6-4ED5-9AD9-E64A6AA1E6FA}</ClassId>
+      <Data><![CDATA[RemoteMouseSyncDataAvailable]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

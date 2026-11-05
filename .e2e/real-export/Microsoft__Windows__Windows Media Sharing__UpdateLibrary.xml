@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FRFX;;;AU)</SecurityDescriptor>
+    <Author>$(@%ProgramFiles%\Windows Media Player\wmpnscfg.exe,-1001)</Author>
+    <Description>$(@%ProgramFiles%\Windows Media Player\wmpnscfg.exe,-1002)</Description>
+    <URI>\Microsoft\Windows\Windows Media Sharing\UpdateLibrary</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="AuthenticatedUsers">
+      <GroupId>S-1-5-11</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <EventTrigger>
+      <Subscription>&lt;QueryList&gt;
+              &lt;Query
+                  Id="0"
+                  Path="System"
+                  &gt;
+                &lt;Select Path="System"&gt;*[System[Provider[@Name='Microsoft-Windows-WMPNSS-Service'] and (EventID=14210)]]&lt;/Select&gt;
+              &lt;/Query&gt;
+            &lt;/QueryList&gt;</Subscription>
+    </EventTrigger>
+  </Triggers>
+  <Actions Context="AuthenticatedUsers">
+    <Exec>
+      <Command>"%ProgramFiles%\Windows Media Player\wmpnscfg.exe"</Command>
+    </Exec>
+  </Actions>
+</Task>

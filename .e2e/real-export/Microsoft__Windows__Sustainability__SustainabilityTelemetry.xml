@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Source>$(@%SystemRoot%\system32\EcoScoreTask.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\EcoScoreTask.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\EcoScoreTask.dll,-602)</Description>
+    <URI>\Microsoft\Windows\Sustainability\SustainabilityTelemetry</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="AllUsers">
+      <GroupId>S-1-5-32-545</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P7D</Period>
+      <Deadline>P8D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="AllUsers">
+    <ComHandler>
+      <ClassId>{6EE41D75-D091-4FB7-9AD5-018760DD25D4}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

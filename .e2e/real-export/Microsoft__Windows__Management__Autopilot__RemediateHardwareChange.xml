@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Source>$(@%SystemRoot%\system32\Autopilot.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\Autopilot.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\Autopilot.dll,-603)</Description>
+    <URI>\Microsoft\Windows\Management\Autopilot\RemediateHardwareChange</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <BootTrigger>
+      <Delay>PT1M</Delay>
+    </BootTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <ComHandler>
+      <ClassId>{62B2DD2C-F129-42EE-BF59-55D3FD21C215}</ClassId>
+      <Data><![CDATA[RemediateHardwareChange]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

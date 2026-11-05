@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.3" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>16.0.0</Version>
+    <Date>2017-01-01T00:00:00</Date>
+    <Author>Microsoft Office</Author>
+    <Description>This task ensures that your Microsoft Office installation can check for feature updates.</Description>
+    <URI>\Microsoft\Office\Office Feature Updates</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <GroupId>S-1-5-32-545</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T02:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T06:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T10:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T14:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T18:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2017-01-01T22:10:00</StartBoundary>
+      <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Actions Context="Author">
+    <Exec>
+      <Command>C:\Program Files\Microsoft Office\root\Office16\sdxhelper.exe</Command>
+    </Exec>
+  </Actions>
+</Task>

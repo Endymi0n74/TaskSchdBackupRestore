@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Date>2006-11-10T14:29:55.5851926</Date>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FRFX;;;WD)</SecurityDescriptor>
+    <Author>$(@%systemRoot%\System32\msdrm.dll,-6001)</Author>
+    <Description>$(@%systemRoot%\System32\msdrm.dll,-6002)</Description>
+    <URI>\Microsoft\Windows\Active Directory Rights Management Services Client\AD RMS Rights Policy Template Management (Automated)</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="AllUsers">
+      <GroupId>S-1-1-0</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <AllowHardTerminate>false</AllowHardTerminate>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <Duration>PT10M</Duration>
+      <WaitTimeout>PT1H</WaitTimeout>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger id="7dba1862-fdda-4030-83de-895375c111d4">
+      <StartBoundary>2006-11-09T03:00:00</StartBoundary>
+      <RandomDelay>PT1H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <LogonTrigger id="06b3f632-87ad-4ac0-9737-48ea5ddbaf11">
+      <Delay>PT1H</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Actions Context="AllUsers">
+    <ComHandler>
+      <ClassId>{CF2CF428-325B-48D3-8CA8-7633E36E5A32}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

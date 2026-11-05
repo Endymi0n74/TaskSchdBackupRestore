@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FWFR;;;BU)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\system32\mscms.dll,-200)</Source>
+    <Author>$(@%SystemRoot%\system32\mscms.dll,-201)</Author>
+    <Description>$(@%SystemRoot%\system32\mscms.dll,-202)</Description>
+    <URI>\Microsoft\Windows\WindowsColorSystem\Calibration Loader</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Group">
+      <GroupId>S-1-5-32-545</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <AllowHardTerminate>false</AllowHardTerminate>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Queue</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <LogonTrigger id="C3B270C8-8291-4326-92F6-2FF65DE39010" />
+    <SessionStateChangeTrigger id="79B8DA54-F688-4a18-B2D4-7AA891A193E8">
+      <StateChange>ConsoleConnect</StateChange>
+    </SessionStateChangeTrigger>
+  </Triggers>
+  <Actions Context="Group">
+    <ComHandler>
+      <ClassId>{B210D694-C8DF-490D-9576-9E20CDBC20BD}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>
