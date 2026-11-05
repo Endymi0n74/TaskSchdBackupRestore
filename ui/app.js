@@ -385,6 +385,7 @@ function actionBadge(item) {
     conflict: ["badge-conflict", "Conflit"],
     password_required: ["badge-password", "Mot de passe requis"],
     user_unmapped: ["badge-unmapped", "Utilisateur non mappé"],
+    target_duplicate: ["badge-conflict", "Cible en double"],
   };
   const [cls, label] = map[item.actionKind] || ["badge-skip", item.actionLabel];
   let html = `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
@@ -433,7 +434,7 @@ function renderPlan() {
 
   $("plan-note").textContent =
     (folder
-      ? `Restauration sous « ${folder} » (structure d'origine préservée). Résolvez chaque tâche puis « Re-planifier » pour actualiser le plan.`
+      ? `Restauration sous « ${folder} » (tâches placées directement dans ce dossier). Résolvez chaque tâche puis « Re-planifier » pour actualiser le plan.`
       : "Résolvez chaque tâche puis « Re-planifier » pour actualiser le plan.") +
     " « Modifier l'action… » adapte le programme, les arguments et le dossier de démarrage d'une tâche (chemins propres à la machine source).";
   $("plan-count").textContent = `${plan.length} tâche(s) — ${pending} à résoudre.`;
@@ -531,6 +532,11 @@ function buildResolutionControls(item) {
       addSkipToggle();
       break;
     }
+    // Chemin déjà pris par une autre tâche de l'archive après aplatissement :
+    // seule la première est restaurée, le dossier cible doit changer.
+    case "target_duplicate":
+      wrap.appendChild(document.createTextNode("Changer le dossier cible"));
+      break;
     case "create":
     case "update":
       addSkipToggle();
