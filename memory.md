@@ -6,7 +6,8 @@ en complément de [`README.md`](README.md) et [`AGENTS.md`](AGENTS.md).
 ## En bref
 
 - **Statut** : rouvert le 2026-10-25 pour une revue de code et un renommage d'identité,
-  **publié** le même jour : **1.2.0** sur `master`. Sujet **sans rapport** avec
+  **publié** le même jour : **1.2.0** sur `master`, puis **1.3.0** le 2026-11-05
+  (dossier cible aplati). Sujet **sans rapport** avec
   `SteamAchievementManager` (SAM, `D:\Codex\SteamAchievementManager`, clos lui aussi le
   même jour) ni avec l'outillage **REA** (`D:\Codex\tools\memory.md`) : trois entrées
   indépendantes, ne pas les mélanger. **Ne pas rouvrir sans demande explicite.**
@@ -15,7 +16,10 @@ en complément de [`README.md`](README.md) et [`AGENTS.md`](AGENTS.md).
   GitHub sous **TaskSchdBackupRestore** (`Endymi0n74/TaskSchdBackupRestore`).
 - **Deux interfaces, un moteur** : `TaskSchdBackupRestore` (crate Rust + CLI) et `TaskSchdBackupRestoreGui.exe`
   (Tauri 2). Livraison portable dans `dist/`.
-- **Dernière version** : **1.2.0** (2026-10-25) — renommage d'identité et
+- **Dernière version** : **1.3.0** (2026-11-05) — le dossier cible de restauration
+  (`--folder`) **remplace** l'emplacement d'origine des tâches au lieu de l'englober
+  (`\Microsoft\Tâche` → `\Navy\Tâche`), et deux tâches visant la même cible sont
+  bloquées en `CIBLE EN DOUBLE`. Avant elle : **1.2.0** (2026-10-25) — renommage d'identité et
   correctifs de sûreté de données (collision de noms à l'export, archives refusées à la
   validation, écrasement réversible). Avant elle : **1.1.2** (2026-10-07) — édition des
   actions avant restauration ; **1.1.1** (2026-10-06) — sortie déterministe à la fermeture (processus
@@ -230,6 +234,23 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   une par une en CLI, export de 173 tâches revalidé après chaque correctif, ligne de l'import
   élevé relue par `CommandLineToArgvW` **et** par un lancement réel, e2e `#[ignore]` rejoué.
 
+- **2026-11-05 (release 1.3.0)** — Dossier cible aplati : `remap_path` produit
+  `<dossier cible>\<nom de tâche>` au lieu de préfixer le chemin source complet (plus de
+  `\Navy\Microsoft\…`), avec garde-fou `ImportAction::TargetDuplicate` (« CIBLE EN
+  DOUBLE », rapport : « chemin cible deja reserve par la tache '…' »). Version unifiée
+  **1.3.0** dans les trois fichiers canoniques, CHANGELOG, notes
+  `release/RELEASE-NOTES-1.3.0.md`, guide et mémo régénérés (empreintes enregistrées),
+  README FR/EN, AGENTS §7 et aide du CLI alignés. Tests 74 + 4 et 26 + 1 verts. Livrable
+  `release/TaskSchdBackupRestore-1.3.0-windows/` + `.zip`, 49 fichiers (CLI `31d94f6b…`,
+  interface `55ef7b48…`, zip `25a22e4b…`, 4 923 743 octets). **Publication** : commit
+  `0b5b0b8` sur `master`, tag `v1.3.0`, release GitHub avec le zip. Comportement vérifié
+  **sur les binaires de `dist/`** : plan réel `CREATE \Navy\ZTestMsr`,
+  `CREATE \Navy\ZTestWin`, `CIBLE EN DOUBLE`, aucun `\Navy\Microsoft` ni
+  `\Navy\Windows`. **Création réelle non rejouée** : l'import exige un jeton
+  administrateur (`is_elevated`, garde-fou volontaire) et les quatre invites UAC sont
+  restées sans réponse ; harnais prêt dans `.e2e/` (non versionné) :
+  `powershell -File .e2e/elevated.ps1`.
+
 - **2026-10-25 (release 1.2.0)** — Version unifiée **1.2.0** dans les trois
   fichiers canoniques ; CHANGELOG (entrée 1.2.0 : identité + robustesse), guide (chip et
   pied de page), README FR/EN, AGENTS.md §7 alignés, PDF régénérés (`-Action Build`, empreintes
@@ -371,3 +392,8 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
 - [x] **Release 1.2.0** publiée le 2026-10-25 (`v1.2.0` +
       `TaskSchdBackupRestore-1.2.0-windows.zip`, 49 fichiers) : identité unifiée + correctifs
       de sûreté ; `master` fusionné en fast-forward, CI et Guide PDF vertes.
+- [x] **Release 1.3.0** publiée le 2026-11-05 (`v1.3.0` +
+      `TaskSchdBackupRestore-1.3.0-windows.zip`, 49 fichiers) : dossier cible aplati +
+      garde-fou `CIBLE EN DOUBLE`.
+- [ ] Confirmer par un import **élevé** (UAC) que les deux tâches sont bien créées sous
+      `\Navy` : `powershell -NoProfile -ExecutionPolicy Bypass -File .e2e/elevated.ps1`.
