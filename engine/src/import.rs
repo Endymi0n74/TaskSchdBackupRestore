@@ -1151,7 +1151,10 @@ mod tests {
             "\\Archive\\Task"
         );
         // Les slashes superflus du dossier cible sont nettoyes.
-        assert_eq!(remap_path("\\A\\Task", Some("Archive\\")), "\\Archive\\Task");
+        assert_eq!(
+            remap_path("\\A\\Task", Some("Archive\\")),
+            "\\Archive\\Task"
+        );
     }
 
     #[test]
