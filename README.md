@@ -67,7 +67,7 @@ guidée sur les anciens serveurs.
 
 ## 📖 Guide d'utilisation (PDF)
 
-Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.2.0** — est
+Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.3.0** — est
 inclus : **[`dist/Guide-TaskSchdBackupRestore.pdf`](dist/Guide-TaskSchdBackupRestore.pdf)**
 
 - vue d'ensemble : interface et ligne de commande, un même moteur (section 1) ;
@@ -146,7 +146,7 @@ TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dr
 :: 4. Importer réellement (en administrateur)
 TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ::    Options utiles :
-::    --folder \Restauration-2026        restaure sous ce dossier, structure préservée
+::    --folder \Hestia                   restaure les tâches directement dans ce dossier
 ::    --undo-dir C:\TaskSchdBackupRestore\undo          copies des tâches écrasées (réimportables)
 ::    --password-file mdp.txt            mots de passe (DOMAINE\user=motdepasse, 1/ligne)
 ::    --user-map OLDPC\user:NEWPC\user   remplace un compte source par un compte cible

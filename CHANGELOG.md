@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0 — 2026-11-05
+
+### Dossier cible de restauration
+
+- `--folder` (et « Dossier cible du planificateur » dans l'interface) **remplace**
+  désormais l'emplacement d'origine de chaque tâche au lieu de l'englober : une tâche
+  `\Microsoft\Tâche` restaurée sous `\Hestia` devient `\Hestia\Tâche`, et non
+  `\Hestia\Microsoft\Tâche`. Les sous-dossiers source ne sont plus recopiés.
+- Deux tâches de dossiers différents qui visent le même chemin après aplatissement sont
+  signalées `CIBLE EN DOUBLE` : la première est restaurée, la seconde est bloquée au lieu
+  de l'écraser en silence.
+
 ## 1.2.0 — 2026-10-25
 
 ### Robustesse à l'export et à la restauration

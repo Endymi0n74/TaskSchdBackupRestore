@@ -106,6 +106,12 @@ pub enum ImportAction {
     },
     /// Choix explicite de l'utilisateur (interactif ou answer-file) de sauter cette tache.
     SkippedByChoice,
+    /// Deux taches de l'archive visent le meme chemin dans le dossier cible
+    /// (restauration a plat) : seule la premiere est restauree.
+    TargetDuplicate {
+        /// Chemin source de la tache qui occupe deja ce chemin cible.
+        source: String,
+    },
 }
 
 impl ImportAction {
@@ -116,6 +122,7 @@ impl ImportAction {
             ImportAction::Conflict
                 | ImportAction::PasswordRequired { .. }
                 | ImportAction::UserUnmapped { .. }
+                | ImportAction::TargetDuplicate { .. }
         )
     }
 
@@ -134,6 +141,7 @@ impl ImportAction {
             ImportAction::PasswordRequired { .. } => "MOT DE PASSE REQUIS",
             ImportAction::UserUnmapped { .. } => "UTILISATEUR NON MAPPE",
             ImportAction::SkippedByChoice => "SKIP (choix utilisateur)",
+            ImportAction::TargetDuplicate { .. } => "CIBLE EN DOUBLE",
         }
     }
 }

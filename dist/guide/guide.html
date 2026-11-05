@@ -152,7 +152,7 @@
     <p>Export et import des tâches planifiées Windows, avec l'interface graphique et la ligne de commande</p>
   </div>
   <div class="cover-meta">
-    <span class="chip">🆕 Version 1.2.0</span>
+    <span class="chip">🆕 Version 1.3.0</span>
     <span class="chip">📅 Octobre 2026</span>
     <span class="chip">🖥️ Windows Server 2008 R2 → 2025+</span>
     <span class="chip">🔐 Archive ZIP chiffrée AES-256</span>
@@ -355,7 +355,7 @@
 <ol class="steps">
   <li>Choisir la source (figure 3) : <strong>un fichier <code>.zip</code></strong> via « Choisir une archive .zip… » (+ mot de passe si chiffré), ou <strong>un dossier d'export</strong> : saisir le chemin (ou « Parcourir… »). Un chemin en <code>.zip</code> saisi dans le champ dossier est <strong>détecté automatiquement</strong> : extraction et validation déclenchées sans étape manuelle.</li>
   <li>Cliquer <strong>« Vérifier l'archive »</strong> : intégrité contrôlée (manifeste présent, empreintes SHA-256 conformes, XML bien formés). Un résumé vert s'affiche : <em>« ✓ Archive valide : N tâche(s), exportée(s) le … depuis «&nbsp;MACHINE&nbsp;» »</em>.</li>
-  <li>(Optionnel) renseigner un <strong>dossier cible du planificateur</strong>, ex. <code>\Restauration-2026</code> : chaque tâche est restaurée sous ce dossier, sa structure d'origine préservée (<code>\Dossier\Tâche</code> → <code>\Restauration-2026\Dossier\Tâche</code>).</li>
+  <li>(Optionnel) renseigner un <strong>dossier cible du planificateur</strong>, ex. <code>\Hestia</code> : chaque tâche est restaurée directement dans ce dossier, son emplacement d'origine n'est pas recopié (<code>\Microsoft\Tâche</code> → <code>\Hestia\Tâche</code>).</li>
   <li>Cliquer <strong>« Préparer le plan »</strong> : chaque tâche est analysée et classée — <span class="badge b-green">Créer</span> <span class="badge b-blue">Mettre à jour</span> <span class="badge b-gray">Identique (rien à faire)</span> <span class="badge b-gray">Sautée</span> <span class="badge b-orange">Conflit</span> <span class="badge b-purple">Utilisateur non mappé</span> <span class="badge b-red">Mot de passe requis</span>.</li>
   <li><strong>Résoudre les lignes bloquantes</strong> : les lignes <span class="badge b-red">Mot de passe requis</span> attendent le mot de passe du compte (champ masqué, ligne par ligne ou mot de passe unique — voir 4.1) ; les lignes <span class="badge b-purple">Utilisateur non mappé</span> proposent dans la colonne <em>Résolution</em> le compte de la machine cible. Cliquer ensuite <strong>« Re-planifier »</strong> pour actualiser le plan.</li>
   <li><strong>« Simuler (dry-run) »</strong> pour vérifier le rapport sans rien écrire, puis <strong>« Importer »</strong> pour appliquer réellement.</li>
@@ -599,11 +599,11 @@ TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07</code></pre>
 <h2 class="section">8. Options avancées et automatisation</h2>
 
 <h3>Restauration dans un dossier spécifique (<code>--folder</code>)</h3>
-<p>Le dossier cible préfixe chaque tâche en préservant la structure d'origine — idéal pour une restauration « à côté » sans écraser l'existant, ou pour isoler une reprise sur un serveur.</p>
-<pre><code><span class="c">:: chaque tâche sera créée sous \Restauration-2026\... (structure d'origine conservée)</span>
-TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --folder "\Restauration-2026" --dry-run
+<p>Le dossier cible <strong>remplace</strong> l'emplacement d'origine de chaque tâche : elle est restaurée directement dedans, sans recopier ses sous-dossiers — idéal pour une restauration « à côté » sans écraser l'existant, ou pour isoler une reprise sur un serveur.</p>
+<pre><code><span class="c">:: chaque tâche sera créée directement dans \Hestia (sous-dossiers source non recopiés)</span>
+TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --folder "\Hestia" --dry-run
 
-<span class="c">:: la simulation confirme : CREATE \Restauration-2026\Backup\Nightly</span></code></pre>
+<span class="c">:: la simulation confirme : CREATE \Hestia\Nightly (et non \Hestia\Microsoft\Nightly)</span></code></pre>
 
 <h3>Comptes et mots de passe</h3>
 <p>Un compte qui n'est ni un compte système bien connu (SYSTEM, LOCAL SERVICE…) ni mappé explicitement bloque la tâche (badge <span class="badge b-purple">Utilisateur non mappé</span>, figure 8 en CLI) ; un type de connexion « Mot de passe » exige le secret du compte (badge <span class="badge b-red">Mot de passe requis</span>). Dans l'interface, ce sont la colonne <em>Résolution</em> et le <strong>« Mot de passe unique »</strong> (4.1) ; en ligne de commande :</p>
@@ -659,7 +659,7 @@ TaskSchdBackupRestore.exe import D:\sauvegardes\export-2026-10-07 --interactive<
 </table>
 
 <div class="footer-note">
-  TaskSchdBackupRestore v1.2.0 — Guide illustré : captures réalisées le 7 octobre 2026 sur Windows 11 (interface WebView2 et console Windows).
+  TaskSchdBackupRestore v1.3.0 — Guide illustré : captures réalisées le 7 octobre 2026 sur Windows 11 (interface WebView2 et console Windows).
   Binaires : <code>dist\TaskSchdBackupRestoreGui.exe</code> (interface, Windows 10/11 et Server 2016 → 2025+) et <code>dist\TaskSchdBackupRestore.exe</code> (CLI, Server 2008 R2 → 2025+).
 </div>
 

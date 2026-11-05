@@ -85,8 +85,8 @@ pub enum Command {
         #[arg(long, value_enum)]
         conflict_policy: Option<ConflictPolicy>,
 
-        /// Dossier cible du planificateur (ex: \\Restore-2026-01-01) : restaure
-        /// chaque tache sous ce dossier en preservant sa structure d'origine.
+        /// Dossier cible du planificateur (ex: \\Hestia) : restaure chaque tache
+        /// directement dans ce dossier, sans recopier son emplacement d'origine.
         #[arg(long)]
         folder: Option<String>,
 

@@ -91,7 +91,7 @@ pub struct ManifestSummary {
 pub struct PlanItemView {
     /// Chemin d'origine dans l'archive (clé des décisions : sauts, conflits).
     pub path: String,
-    /// Chemin effectif sur la cible (préfixé par le dossier cible, si défini).
+    /// Chemin effectif sur la cible (placé dans le dossier cible, si défini).
     pub target_path: String,
     /// Libellé lisible de l'action (ex: "CREATE").
     pub action_label: String,
@@ -196,6 +196,9 @@ fn plan_item_view(item: &PlanItem) -> PlanItemView {
         }
         ImportAction::UserUnmapped { source_user } => {
             ("user_unmapped", None, Some(source_user.clone()), false)
+        }
+        ImportAction::TargetDuplicate { .. } => {
+            ("target_duplicate", item.target_user.clone(), None, false)
         }
     };
     // Action éditable de la tâche (première action `Exec`) : lecture

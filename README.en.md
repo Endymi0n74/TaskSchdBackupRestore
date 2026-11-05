@@ -61,7 +61,7 @@ experience on older servers.
 
 ## 📖 User guide (PDF)
 
-The complete illustrated guide — 10 sections, 11 annotated screenshots, written for **v1.2.0** —
+The complete illustrated guide — 10 sections, 11 annotated screenshots, written for **v1.3.0** —
 is included: **[`dist/Guide-TaskSchdBackupRestore.pdf`](dist/Guide-TaskSchdBackupRestore.pdf)**
 
 - overview: interface and command line, one engine (section 1) ;
@@ -139,7 +139,7 @@ TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dr
 :: 4. Really import (as administrator)
 TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ::    Useful options:
-::    --folder \Restauration-2026        restore under this folder, structure preserved
+::    --folder \Hestia                   restore the tasks directly into this folder
 ::    --password-file mdp.txt            passwords (DOMAIN\user=password, 1 per line)
 ::    --user-map OLDPC\user:NEWPC\user   replace a source account with a target account
 ::    --skip-password-tasks              skip (without blocking) tasks without a password

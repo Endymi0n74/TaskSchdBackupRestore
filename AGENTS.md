@@ -55,7 +55,7 @@
 - **Interface** : les tâches `\Microsoft\` sont masquées par défaut (case « Masquer les tâches Microsoft » dans `ui/app.js` et `ui/index.html`).
 - **Thèmes** : `ui/style.css` ne définit aucune variable de palette. Les variables (`--bg`, `--primary`, etc.) viennent du thème actif chargé par `ui/index.html` : `legacy.css` (thème publié) ou `hestia.css` (variante locale). Bascule : `tools\select-theme.ps1 -Action Set -Theme hestia|legacy`. Ne livre jamais une variante active : `make-release.ps1` contrôle `-Action Check -Require legacy` et s'arrête sinon. Une nouvelle palette = un fichier dans `ui/themes/` + une entrée dans `ui/index.html` et dans `select-theme.ps1`. Toute modification de `ui/style.css` doit rester sans effet sur le thème publié.
 - **Tests** : toute nouvelle logique métier dans `TaskSchdBackupRestore` a des tests unitaires avec `MockScheduler`. Les tests d'archive (aller-retour, AES, zip-slip, filtrage) sont dans `src-tauri/src/archive.rs`.
-- **Version** : une seule version, `1.2.0`, dans `engine/Cargo.toml`, `src-tauri/Cargo.toml` et `src-tauri/tauri.conf.json`. Garde-les synchronisées. Le CLI affiche `env!("CARGO_PKG_VERSION")`.
+- **Version** : une seule version, `1.3.0`, dans `engine/Cargo.toml`, `src-tauri/Cargo.toml` et `src-tauri/tauri.conf.json`. Garde-les synchronisées. Le CLI affiche `env!("CARGO_PKG_VERSION")`.
 - **Guide PDF** : `dist/Guide-TaskSchdBackupRestore.pdf` et `dist/Memo-motifs.pdf` sont générés par Edge headless à partir de `dist/guide/`. L'empreinte des sources est dans `dist/guide/pdf-sources.sha256`, gérée par `tools/guide-pdf.ps1` (`-Action Check | Build | Update`). Ne compare jamais les octets des PDF : Edge n'est pas reproductible et les PDF sont retouchés à la main. Seule l'empreinte des sources compte. Après une modification des sources, relance `-Action Build`, ou `-Action Update` si le PDF livré a été retouché à la main. Le workflow `guide-pdf.yml` régénère et commite les PDF, et échoue en pull request si le PDF commité est périmé.
 
 ## 8. Flux d'import (à ne pas casser)
@@ -102,3 +102,25 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\select-theme.ps1 -Acti
 
 ## Contexte
 Voir [`memory.md`](memory.md) pour l'historique des décisions, les dates clés et les leçons (bugs COM, pièges WebView2, etc.).
+
+
+## Règle immuable — installation et emplacements (priorité maximale)
+
+<!-- regle-immuable-installation -->
+
+Cette règle prime sur tout le reste de ce fichier et sur les habitudes par défaut des outils.
+
+- **Toute installation va dans `D:\codex`** : paquets, dépendances, modèles, binaires, outils, SDK,
+  environnements virtuels, caches de téléchargement, builds. Créer si besoin un sous-dossier dédié
+  (`D:\codex\<projet>` ou `D:\codex\tools\<outil>`).
+- **Aucun fichier créé, modifié, téléchargé, déplacé ou supprimé sous `C:\` sans accord explicite** de
+  l'utilisateur. En cas de besoin : s'arrêter, expliquer pourquoi, proposer un emplacement sous
+  `D:\codex`, attendre la réponse.
+- Rediriger les défauts des outils vers `D:\codex` (`PIP_TARGET`, `NPM_CONFIG_PREFIX`, `HF_HOME`,
+  `CARGO_HOME`, `GOPATH`, `TMP`/`TEMP`, caches divers) au lieu de `~`, `%LOCALAPPDATA%`, `%APPDATA%`,
+  `%USERPROFILE%` ou `/tmp`.
+- **Lecture seule sous `C:\`** : autorisée sans accord (lire, lister, inspecter).
+- Seule exception pré-approuvée : le dossier temporaire d'OpenCode
+  `C:\Users\endymion\AppData\Local\Temp\opencode` (déjà validé par l'utilisateur).
+- Déplacer une installation existante de `C:\` vers `D:\codex` compte comme une modification sous
+  `C:\` : demander avant.

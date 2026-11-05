@@ -550,13 +550,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(report.created.len(), 2);
-        // La structure source est preservée sous le dossier cible.
-        assert!(target
-            .task_exists("\\Restore-2026\\Backup\\Nightly")
-            .unwrap());
-        assert!(target
-            .task_exists("\\Restore-2026\\Backup\\Weekly")
-            .unwrap());
+        // Les taches arrivent directement dans le dossier cible, le dossier
+        // source (`Backup`) n'est pas recopie.
+        assert!(target.task_exists("\\Restore-2026\\Nightly").unwrap());
+        assert!(target.task_exists("\\Restore-2026\\Weekly").unwrap());
         assert!(
             !target.task_exists("\\Backup\\Nightly").unwrap(),
             "rien ne doit être écrit au chemin source"

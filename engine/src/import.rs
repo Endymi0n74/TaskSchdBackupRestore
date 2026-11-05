@@ -27,8 +27,8 @@ use crate::wizard::Interactor;
 pub struct PlanItem {
     /// Enregistrement d'origine (chemin, hash, utilisateur/logon type declares a l'export).
     pub record: TaskRecord,
-    /// Chemin effectif de la tache sur la cible : `record.path` eventuellement
-    /// prefixe par le dossier cible (`--folder` / `target_folder`). C'est ce
+    /// Chemin effectif de la tache sur la cible : `record.path` remplace par le
+    /// dossier cible (`--folder` / `target_folder`). C'est ce
     /// chemin qui est utilise pour l'existence, la comparaison et l'ecriture.
     pub target_path: String,
     /// XML brut a enregistrer (identique a celui exporte).
@@ -58,23 +58,32 @@ pub struct ImportOptions<'a> {
     pub user_map: HashMap<String, String>,
     /// Fichier de reponses eventuellement charge, pour un import non interactif.
     pub answers: Option<&'a AnswerFile>,
-    /// Dossier cible du planificateur (ex: `\\Restore-2026-01-01`) : si
-    /// renseigne, chaque tache est restauree sous ce dossier en **preservant
-    /// sa structure d'origine** (`\\A\\B\\Tache` -> `\\Cible\\A\\B\\Tache`).
-    /// Cela evite les collisions de noms et conserve le groupement source.
+    /// Dossier cible du planificateur (ex: `\\Hestia`) : si renseigne, chaque
+    /// tache est restauree **directement** dans ce dossier, sans recopier son
+    /// emplacement d'origine (`\\Microsoft\\Tache` -> `\\Hestia\\Tache`).
     pub target_folder: Option<String>,
+}
+
+/// Nom de tache : dernier segment d'un chemin du planificateur.
+/// `\\A\\B\\Tache` -> `Tache`.
+fn task_name(path: &str) -> &str {
+    path.rsplit(|c| c == '\\' || c == '/')
+        .find(|segment| !segment.is_empty())
+        .unwrap_or(path)
 }
 
 /// Calcule le chemin effectif d'une tache sur la cible.
 ///
-/// Sans dossier cible, le chemin est inchange. Avec un dossier cible, le
-/// chemin d'origine (qui commence toujours par `\\`) est prefixe :
-/// `\\A\\B\\Tache` + `\\Cible` -> `\\Cible\\A\\B\\Tache`.
+/// Sans dossier cible, le chemin est inchange. Avec un dossier cible, ce
+/// dossier **remplace** l'emplacement d'origine, il ne l'englobe pas :
+/// `\\Microsoft\\Tache` + `\\Hestia` -> `\\Hestia\\Tache` (et non
+/// `\\Hestia\\Microsoft\\Tache`). Les sous-dossiers source ne sont pas recopies.
 ///
-/// La structure d'origine est preservee volontairement : deux taches de meme
-/// nom dans des dossiers differents ne peuvent pas entrer en collision, et le
-/// groupement source est conserve. Un dossier vide ou `None` laisse le chemin
-/// inchange.
+/// Aplatir peut faire viser le meme chemin a deux taches de dossiers
+/// differents (`\\A\\T` et `\\B\\T` -> `\\Hestia\\T`) : `build_plan` reserve la
+/// cible a la premiere et bloque les suivantes au lieu de les laisser
+/// ecraser en silence une definition deja restauree.
+/// Un dossier vide ou `None` laisse le chemin inchange.
 pub fn remap_path(path: &str, target_folder: Option<&str>) -> String {
     let Some(folder) = target_folder.map(str::trim).filter(|f| !f.is_empty()) else {
         return path.to_string();
@@ -83,7 +92,7 @@ pub fn remap_path(path: &str, target_folder: Option<&str>) -> String {
     if folder.is_empty() {
         return path.to_string();
     }
-    format!("\\{folder}{path}")
+    format!("\\{folder}\\{}", task_name(path))
 }
 
 /// XML d'une tache dans l'archive : chemin relu, et **chemin canonique** qui
@@ -367,6 +376,9 @@ pub fn build_plan(
     let _ = answer_passwords_users; // le contenu des mots de passe est deja fusionne dans `resolver`
 
     let mut plan = Vec::new();
+    // Chemin cible (minuscule, Windows ignorant la casse) -> tache source qui
+    // l'occupe deja.
+    let mut cibles: HashMap<String, String> = HashMap::new();
 
     for record in &manifest.tasks {
         let mut xml = xmls
@@ -394,6 +406,22 @@ pub fn build_plan(
         // n'est jamais reecrite, son XML ne doit donc pas etre touche.
         if answer_skips.iter().any(|p| p == &record.path) {
             push_and_continue!(ImportAction::SkippedByChoice);
+        }
+
+        // Aplatir dans le dossier cible peut faire viser le meme chemin a deux
+        // taches de dossiers differents (`\A\T` et `\B\T`). La premiere
+        // reserve la cible ; les suivantes sont bloquees, sinon la seconde
+        // ecraserait en silence la definition restauree par la premiere.
+        if let Some(source) = cibles.insert(target_path.to_lowercase(), record.path.clone()) {
+            plan.push(PlanItem {
+                record: record.clone(),
+                target_path,
+                xml,
+                action: ImportAction::TargetDuplicate { source },
+                target_user: None,
+                password: None,
+            });
+            continue;
         }
 
         // 2. Surcharge d'action (programme / arguments / dossier de
@@ -596,6 +624,12 @@ pub fn execute_plan_with_undo(
                 report.blocked.push((
                     item.target_path.clone(),
                     format!("utilisateur '{source_user}' non mappe"),
+                ));
+            }
+            ImportAction::TargetDuplicate { source } => {
+                report.blocked.push((
+                    item.target_path.clone(),
+                    format!("chemin cible deja reserve par la tache '{source}'"),
                 ));
             }
         }
@@ -1104,16 +1138,62 @@ mod tests {
     }
 
     #[test]
-    fn remap_path_prefixes_while_preserving_structure() {
-        assert_eq!(remap_path("\\Task", Some("\\Restore")), "\\Restore\\Task");
+    fn remap_path_replaces_source_placement() {
+        assert_eq!(remap_path("\\Task", Some("\\Hestia")), "\\Hestia\\Task");
+        // Le dossier source (`Microsoft` ici) disparait : les taches arrivent
+        // directement dans le dossier cible.
         assert_eq!(
-            remap_path("\\A\\B\\Task", Some("\\Restore-2026-01-01")),
-            "\\Restore-2026-01-01\\A\\B\\Task"
+            remap_path("\\Microsoft\\Task", Some("\\Hestia")),
+            "\\Hestia\\Task"
         );
-        // Les slashes superflus du dossier sont nettoyes, la structure source conservee.
         assert_eq!(
-            remap_path("\\A\\Task", Some("Restore\\")),
-            "\\Restore\\A\\Task"
+            remap_path("\\Microsoft\\Windows\\Task", Some("\\Hestia")),
+            "\\Hestia\\Task"
+        );
+        // Les slashes superflus du dossier cible sont nettoyes.
+        assert_eq!(remap_path("\\A\\Task", Some("Hestia\\")), "\\Hestia\\Task");
+    }
+
+    #[test]
+    fn target_folder_blocks_two_sources_on_one_target() {
+        // `\A\T` et `\B\T` visent tous deux `\Hestia\T` : la seconde doit etre
+        // bloquee, jamais ecraser la premiere.
+        let (r1, xml1) = record("\\A\\T", LogonType::None, None, "<Task>a</Task>");
+        let (r2, xml2) = record("\\B\\T", LogonType::None, None, "<Task>b</Task>");
+        let (manifest, xmls) = manifest_and_xmls(vec![(r1, xml1), (r2, xml2)]);
+        let scheduler = MockScheduler::new(true);
+        let resolver = PasswordResolver::new(None, None, false);
+        let options = ImportOptions {
+            conflict_policy: None,
+            skip_password_tasks: false,
+            user_map: HashMap::new(),
+            answers: None,
+            target_folder: Some("\\Hestia".to_string()),
+        };
+        let plan = build_plan(
+            &scheduler,
+            &manifest,
+            &xmls,
+            &options,
+            &resolver,
+            &NullInteractor,
+        )
+        .unwrap();
+        assert_eq!(plan[0].action, ImportAction::Create);
+        assert_eq!(
+            plan[1].action,
+            ImportAction::TargetDuplicate {
+                source: "\\A\\T".to_string()
+            }
+        );
+
+        let report = execute_plan(&scheduler, &plan, false).unwrap();
+        assert_eq!(report.created, vec!["\\Hestia\\T".to_string()]);
+        assert_eq!(report.blocked.len(), 1);
+        assert_eq!(scheduler.registration_count(), 1);
+        assert_eq!(
+            scheduler.get_task_xml("\\Hestia\\T").unwrap(),
+            "<Task>a</Task>"
         );
     }
 
@@ -1139,14 +1219,14 @@ mod tests {
             &NullInteractor,
         )
         .unwrap();
-        assert_eq!(plan[0].target_path, "\\Restore\\A\\NoSecret");
+        assert_eq!(plan[0].target_path, "\\Restore\\NoSecret");
         assert_eq!(plan[0].action, ImportAction::Create);
 
         let report = execute_plan(&scheduler, &plan, false).unwrap();
-        assert_eq!(report.created, vec!["\\Restore\\A\\NoSecret".to_string()]);
+        assert_eq!(report.created, vec!["\\Restore\\NoSecret".to_string()]);
         assert_eq!(report.exit_code(), 0);
         // La tache est bien enregistree sous le chemin cible, pas le chemin source.
-        assert!(scheduler.task_exists("\\Restore\\A\\NoSecret").unwrap());
+        assert!(scheduler.task_exists("\\Restore\\NoSecret").unwrap());
         assert!(!scheduler.task_exists("\\A\\NoSecret").unwrap());
     }
 
@@ -1158,7 +1238,7 @@ mod tests {
         let (r, xml_owned) = record("\\A\\Same", LogonType::None, None, xml);
         let (manifest, xmls) = manifest_and_xmls(vec![(r, xml_owned)]);
         let scheduler = MockScheduler::new(true).with_task(
-            "\\Restore\\A\\Same",
+            "\\Restore\\Same",
             MockTask {
                 xml: xml.to_string(),
                 user_id: None,
@@ -1183,9 +1263,9 @@ mod tests {
         )
         .unwrap();
         assert_eq!(plan[0].action, ImportAction::SkipIdentical);
-        assert_eq!(plan[0].target_path, "\\Restore\\A\\Same");
+        assert_eq!(plan[0].target_path, "\\Restore\\Same");
         let report = execute_plan(&scheduler, &plan, false).unwrap();
-        assert_eq!(report.skipped, vec!["\\Restore\\A\\Same".to_string()]);
+        assert_eq!(report.skipped, vec!["\\Restore\\Same".to_string()]);
         assert_eq!(scheduler.registration_count(), 0);
     }
 
