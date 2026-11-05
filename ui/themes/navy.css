@@ -1,5 +1,5 @@
 /* ============================================================
-   Thème Navy — bleu marine / orange (variante locale, non publiée)
+   Thème navy — bleu marine / orange (variante locale, non publiée)
 
    Palette : navy #162E67 (structure) + orange #F9A800 (actions).
    Ce feuillet ne remplace pas ui/style.css : il en surcharge la
@@ -155,7 +155,7 @@ input[type="checkbox"] { accent-color: var(--primary); }
   opacity: 1;
 }
 
-/* Action principale : orange Navy, texte marine. */
+/* Action principale : orange du thème, texte marine. */
 .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--primary); }
 .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 

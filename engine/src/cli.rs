@@ -85,7 +85,7 @@ pub enum Command {
         #[arg(long, value_enum)]
         conflict_policy: Option<ConflictPolicy>,
 
-        /// Dossier cible du planificateur (ex: \\Navy) : restaure chaque tache
+        /// Dossier cible du planificateur (ex: \\Archive) : restaure chaque tache
         /// directement dans ce dossier, sans recopier son emplacement d'origine.
         #[arg(long)]
         folder: Option<String>,

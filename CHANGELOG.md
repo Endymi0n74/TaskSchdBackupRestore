@@ -6,8 +6,8 @@
 
 - `--folder` (et « Dossier cible du planificateur » dans l'interface) **remplace**
   désormais l'emplacement d'origine de chaque tâche au lieu de l'englober : une tâche
-  `\Microsoft\Tâche` restaurée sous `\Navy` devient `\Navy\Tâche`, et non
-  `\Navy\Microsoft\Tâche`. Les sous-dossiers source ne sont plus recopiés.
+  `\Microsoft\Tâche` restaurée sous `\Archive` devient `\Archive\Tâche`, et non
+  `\Archive\Microsoft\Tâche`. Les sous-dossiers source ne sont plus recopiés.
 - Deux tâches de dossiers différents qui visent le même chemin après aplatissement sont
   signalées `CIBLE EN DOUBLE` : la première est restaurée, la seconde est bloquée au lieu
   de l'écraser en silence.
@@ -136,7 +136,7 @@
 - **Thème commutable** : `ui/style.css` ne définit plus la palette (structure et composants
   seulement). Le **thème publié** vit dans `ui/themes/legacy.css` (palette historique, active
   par défaut, rendu au pixel près identique à la version précédente) et la **variante locale**
-  Navy (bleu marine / orange) dans `ui/themes/navy.css`. `tools/select-theme.ps1` bascule
+  Archive (bleu marine / orange) dans `ui/themes/navy.css`. `tools/select-theme.ps1` bascule
   le thème actif (`-Action Set -Theme navy|legacy`, `-Action Status`, `-Action Check
   -Require legacy`) : l'interface étant embarquée dans l'exe au moment de la compilation,
   une compilation locale peut porter la variante, tandis que `tools/make-release.ps1`

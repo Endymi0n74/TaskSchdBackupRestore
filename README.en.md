@@ -139,7 +139,7 @@ TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01 --dr
 :: 4. Really import (as administrator)
 TaskSchdBackupRestore.exe import C:\TaskSchdBackupRestore\export-2026-01-01
 ::    Useful options:
-::    --folder \Navy                   restore the tasks directly into this folder
+::    --folder \Archive                   restore the tasks directly into this folder
 ::    --password-file mdp.txt            passwords (DOMAIN\user=password, 1 per line)
 ::    --user-map OLDPC\user:NEWPC\user   replace a source account with a target account
 ::    --skip-password-tasks              skip (without blocking) tasks without a password

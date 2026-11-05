@@ -18,7 +18,7 @@ en complément de [`README.md`](README.md) et [`AGENTS.md`](AGENTS.md).
   (Tauri 2). Livraison portable dans `dist/`.
 - **Dernière version** : **1.3.0** (2026-11-05) — le dossier cible de restauration
   (`--folder`) **remplace** l'emplacement d'origine des tâches au lieu de l'englober
-  (`\Microsoft\Tâche` → `\Navy\Tâche`), et deux tâches visant la même cible sont
+  (`\Microsoft\Tâche` → `\Archive\Tâche`), et deux tâches visant la même cible sont
   bloquées en `CIBLE EN DOUBLE`. Avant elle : **1.2.0** (2026-10-25) — renommage d'identité et
   correctifs de sûreté de données (collision de noms à l'export, archives refusées à la
   validation, écrasement réversible). Avant elle : **1.1.2** (2026-10-07) — édition des
@@ -234,9 +234,19 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   une par une en CLI, export de 173 tâches revalidé après chaque correctif, ligne de l'import
   élevé relue par `CommandLineToArgvW` **et** par un lancement réel, e2e `#[ignore]` rejoué.
 
+- **2026-11-05 (retrait du nom « Navy »)** — Le nom de marque disparaît du produit et
+  du dépôt : exemples de dossier cible `\Archive`, thème local renommé `ui/themes/navy.css`
+  (`-Theme navy|legacy`, `select-theme.ps1`, `make-release.ps1`, README FR/EN, AGENTS,
+  CHANGELOG, guide HTML et PDF, mémoire). Démo du guide renommée
+  (`Archive__zezeazezaeaz.xml`, empreinte SHA-256 du manifeste recalculée). Binaires `dist/`
+  reconstruits (49 → mêmes noms, plus aucune occurrence) et PDF régénérés. Artefact de
+  validation 1.1.0 renommé `release/VALIDATION-INTERNE-1.1.0` (exe `TaskBackupRestore-1.1.0.exe`).
+  Limite assumée : les livrables d'époque 1.1.0/1.2.0 et la release GitHub 1.3.0 gardent
+  leurs binaires d'origine, non reconstruits.
+
 - **2026-11-05 (release 1.3.0)** — Dossier cible aplati : `remap_path` produit
   `<dossier cible>\<nom de tâche>` au lieu de préfixer le chemin source complet (plus de
-  `\Navy\Microsoft\…`), avec garde-fou `ImportAction::TargetDuplicate` (« CIBLE EN
+  `\Archive\Microsoft\…`), avec garde-fou `ImportAction::TargetDuplicate` (« CIBLE EN
   DOUBLE », rapport : « chemin cible deja reserve par la tache '…' »). Version unifiée
   **1.3.0** dans les trois fichiers canoniques, CHANGELOG, notes
   `release/RELEASE-NOTES-1.3.0.md`, guide et mémo régénérés (empreintes enregistrées),
@@ -244,9 +254,9 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
   `release/TaskSchdBackupRestore-1.3.0-windows/` + `.zip`, 49 fichiers (CLI `31d94f6b…`,
   interface `55ef7b48…`, zip `25a22e4b…`, 4 923 743 octets). **Publication** : commit
   `0b5b0b8` sur `master`, tag `v1.3.0`, release GitHub avec le zip. Comportement vérifié
-  **sur les binaires de `dist/`** : plan réel `CREATE \Navy\ZTestMsr`,
-  `CREATE \Navy\ZTestWin`, `CIBLE EN DOUBLE`, aucun `\Navy\Microsoft` ni
-  `\Navy\Windows`. **Création réelle non rejouée** : l'import exige un jeton
+  **sur les binaires de `dist/`** : plan réel `CREATE \Archive\ZTestMsr`,
+  `CREATE \Archive\ZTestWin`, `CIBLE EN DOUBLE`, aucun `\Archive\Microsoft` ni
+  `\Archive\Windows`. **Création réelle non rejouée** : l'import exige un jeton
   administrateur (`is_elevated`, garde-fou volontaire) et les quatre invites UAC sont
   restées sans réponse ; harnais prêt dans `.e2e/` (non versionné) :
   `powershell -File .e2e/elevated.ps1`.
@@ -396,4 +406,4 @@ titre de fenêtre et identifiant `fr.endymion.taskschdbackuprestore`.
       `TaskSchdBackupRestore-1.3.0-windows.zip`, 49 fichiers) : dossier cible aplati +
       garde-fou `CIBLE EN DOUBLE`.
 - [ ] Confirmer par un import **élevé** (UAC) que les deux tâches sont bien créées sous
-      `\Navy` : `powershell -NoProfile -ExecutionPolicy Bypass -File .e2e/elevated.ps1`.
+      `\Archive` : `powershell -NoProfile -ExecutionPolicy Bypass -File .e2e/elevated.ps1`.
