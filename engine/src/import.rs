@@ -58,9 +58,9 @@ pub struct ImportOptions<'a> {
     pub user_map: HashMap<String, String>,
     /// Fichier de reponses eventuellement charge, pour un import non interactif.
     pub answers: Option<&'a AnswerFile>,
-    /// Dossier cible du planificateur (ex: `\\Archive`) : si renseigne, chaque
+    /// Dossier cible du planificateur (ex: `\\BackupTasksFolder`) : si renseigne, chaque
     /// tache est restauree **directement** dans ce dossier, sans recopier son
-    /// emplacement d'origine (`\\Microsoft\\Tache` -> `\\Archive\\Tache`).
+    /// emplacement d'origine (`\\Microsoft\\Tache` -> `\\BackupTasksFolder\\Tache`).
     pub target_folder: Option<String>,
 }
 
@@ -76,11 +76,11 @@ fn task_name(path: &str) -> &str {
 ///
 /// Sans dossier cible, le chemin est inchange. Avec un dossier cible, ce
 /// dossier **remplace** l'emplacement d'origine, il ne l'englobe pas :
-/// `\\Microsoft\\Tache` + `\\Archive` -> `\\Archive\\Tache` (et non
-/// `\\Archive\\Microsoft\\Tache`). Les sous-dossiers source ne sont pas recopies.
+/// `\\Microsoft\\Tache` + `\\BackupTasksFolder` -> `\\BackupTasksFolder\\Tache` (et non
+/// `\\BackupTasksFolder\\Microsoft\\Tache`). Les sous-dossiers source ne sont pas recopies.
 ///
 /// Aplatir peut faire viser le meme chemin a deux taches de dossiers
-/// differents (`\\A\\T` et `\\B\\T` -> `\\Archive\\T`) : `build_plan` reserve la
+/// differents (`\\A\\T` et `\\B\\T` -> `\\BackupTasksFolder\\T`) : `build_plan` reserve la
 /// cible a la premiere et bloque les suivantes au lieu de les laisser
 /// ecraser en silence une definition deja restauree.
 /// Un dossier vide ou `None` laisse le chemin inchange.
@@ -1139,27 +1139,30 @@ mod tests {
 
     #[test]
     fn remap_path_replaces_source_placement() {
-        assert_eq!(remap_path("\\Task", Some("\\Archive")), "\\Archive\\Task");
+        assert_eq!(
+            remap_path("\\Task", Some("\\BackupTasksFolder")),
+            "\\BackupTasksFolder\\Task"
+        );
         // Le dossier source (`Microsoft` ici) disparait : les taches arrivent
         // directement dans le dossier cible.
         assert_eq!(
-            remap_path("\\Microsoft\\Task", Some("\\Archive")),
-            "\\Archive\\Task"
+            remap_path("\\Microsoft\\Task", Some("\\BackupTasksFolder")),
+            "\\BackupTasksFolder\\Task"
         );
         assert_eq!(
-            remap_path("\\Microsoft\\Windows\\Task", Some("\\Archive")),
-            "\\Archive\\Task"
+            remap_path("\\Microsoft\\Windows\\Task", Some("\\BackupTasksFolder")),
+            "\\BackupTasksFolder\\Task"
         );
         // Les slashes superflus du dossier cible sont nettoyes.
         assert_eq!(
-            remap_path("\\A\\Task", Some("Archive\\")),
-            "\\Archive\\Task"
+            remap_path("\\A\\Task", Some("\\BackupTasksFolder")),
+            "\\BackupTasksFolder\\Task"
         );
     }
 
     #[test]
     fn target_folder_blocks_two_sources_on_one_target() {
-        // `\A\T` et `\B\T` visent tous deux `\Archive\T` : la seconde doit etre
+        // `\A\T` et `\B\T` visent tous deux `\BackupTasksFolder\T` : la seconde doit etre
         // bloquee, jamais ecraser la premiere.
         let (r1, xml1) = record("\\A\\T", LogonType::None, None, "<Task>a</Task>");
         let (r2, xml2) = record("\\B\\T", LogonType::None, None, "<Task>b</Task>");
@@ -1171,7 +1174,7 @@ mod tests {
             skip_password_tasks: false,
             user_map: HashMap::new(),
             answers: None,
-            target_folder: Some("\\Archive".to_string()),
+            target_folder: Some("\\BackupTasksFolder".to_string()),
         };
         let plan = build_plan(
             &scheduler,
@@ -1191,11 +1194,11 @@ mod tests {
         );
 
         let report = execute_plan(&scheduler, &plan, false).unwrap();
-        assert_eq!(report.created, vec!["\\Archive\\T".to_string()]);
+        assert_eq!(report.created, vec!["\\BackupTasksFolder\\T".to_string()]);
         assert_eq!(report.blocked.len(), 1);
         assert_eq!(scheduler.registration_count(), 1);
         assert_eq!(
-            scheduler.get_task_xml("\\Archive\\T").unwrap(),
+            scheduler.get_task_xml("\\BackupTasksFolder\\T").unwrap(),
             "<Task>a</Task>"
         );
     }
