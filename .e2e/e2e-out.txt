@@ -38,26 +38,26 @@
   }=== 4. validate ===
   Archive valide : 3 tache(s), exportee(s) le 2026-11-05T10:54:20.035811800+01:00 depuis 'KEYRA-PC'.
 OK    archive valide
-=== 5. plan dry-run --folder \Archive (binaire CLI de dist) ===
+=== 5. plan dry-run --folder \BackupTasksFolder (binaire CLI de dist) ===
   dry-run exit=1
   === Plan d'import (3 tache(s)) ===
-  CREATE                   \Archive\ZTestMsr
-  CREATE                   \Archive\ZTestWin
-  CIBLE EN DOUBLE          \Archive\ZTestMsr
+  CREATE                   \BackupTasksFolder\ZTestMsr
+  CREATE                   \BackupTasksFolder\ZTestWin
+  CIBLE EN DOUBLE          \BackupTasksFolder\ZTestMsr
   
   Execution non interactive sans fichier de reponses : certaines taches restent bloquees (voir ci-dessus).
   
   === Rapport d'import (dry-run) ===
-  Crees (2) : \Archive\ZTestMsr, \Archive\ZTestWin seraient
+  Crees (2) : \BackupTasksFolder\ZTestMsr, \BackupTasksFolder\ZTestWin seraient
   Bloques (1) :
-    - \Archive\ZTestMsr: chemin cible deja reserve par la tache '\Microsoft\ZTestMsr'
+    - \BackupTasksFolder\ZTestMsr: chemin cible deja reserve par la tache '\Microsoft\ZTestMsr'
 OK    une creation est planifiee
-OK    chemin cible \Archive\ZTestMsr (source \Microsoft\ZTestMsr)
-OK    chemin cible \Archive\ZTestWin (source \Microsoft\Windows\ZTestWin)
+OK    chemin cible \BackupTasksFolder\ZTestMsr (source \Microsoft\ZTestMsr)
+OK    chemin cible \BackupTasksFolder\ZTestWin (source \Microsoft\Windows\ZTestWin)
 OK    CIBLE EN DOUBLE pour \ZTestCollision\ZTestMsr (collision)
-OK    aucun \Archive\Microsoft propose
-OK    aucun \Archive\Windows propose
-OK    aucun \Archive\ZTestCollision propose
+OK    aucun \BackupTasksFolder\Microsoft propose
+OK    aucun \BackupTasksFolder\Windows propose
+OK    aucun \BackupTasksFolder\ZTestCollision propose
 === 6. import reel via le binaire GUI (mode helper) ===
   helper exit=2
   --- result.json ---
@@ -66,21 +66,21 @@ OK    aucun \Archive\ZTestCollision propose
     "error": "Acces refuse: droits administrateur requis pour 'import (RegisterTask)'",
     "report": null
   }ECHEC helper GUI : resultat ok
-ECHEC helper GUI : \Archive\ZTestMsr
-ECHEC helper GUI : \Archive\ZTestWin
-OK    helper GUI : aucun \Archive\Microsoft dans le rapport
+ECHEC helper GUI : \BackupTasksFolder\ZTestMsr
+ECHEC helper GUI : \BackupTasksFolder\ZTestWin
+OK    helper GUI : aucun \BackupTasksFolder\Microsoft dans le rapport
 === 7. etat reel du planificateur ===
-ECHEC \Archive\ZTestMsr existe dans le planificateur
-ECHEC \Archive\ZTestWin existe dans le planificateur
-OK    aucune tache \Archive\Microsoft\*
-OK    aucune tache \Archive\Windows\*
-ECHEC exactement 2 taches sous \Archive (trouve : 0)
+ECHEC \BackupTasksFolder\ZTestMsr existe dans le planificateur
+ECHEC \BackupTasksFolder\ZTestWin existe dans le planificateur
+OK    aucune tache \BackupTasksFolder\Microsoft\*
+OK    aucune tache \BackupTasksFolder\Windows\*
+ECHEC exactement 2 taches sous \BackupTasksFolder (trouve : 0)
 === 8. second import (CLI) : rien a refaire ===
   exit=2
   === Plan d'import (3 tache(s)) ===
-  CREATE                   \Archive\ZTestMsr
-  CREATE                   \Archive\ZTestWin
-  CIBLE EN DOUBLE          \Archive\ZTestMsr
+  CREATE                   \BackupTasksFolder\ZTestMsr
+  CREATE                   \BackupTasksFolder\ZTestWin
+  CIBLE EN DOUBLE          \BackupTasksFolder\ZTestMsr
   
   Execution non interactive sans fichier de reponses : certaines taches restent bloquees (voir ci-dessus).
   Erreur: Acces refuse: droits administrateur requis pour 'import (RegisterTask)'
