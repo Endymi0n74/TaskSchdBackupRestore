@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\system32\spaceman.exe,-1)</Source>
+    <Author>$(@%SystemRoot%\system32\spaceman.exe,-2)</Author>
+    <Description>$(@%SystemRoot%\system32\spaceman.exe,-3)</Description>
+    <URI>\Microsoft\Windows\SpacePort\SpaceManagerTask</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <BootTrigger>
+      <Enabled>false</Enabled>
+      <Delay>PT2M</Delay>
+    </BootTrigger>
+    <WnfStateChangeTrigger>
+      <StateName>7510BCA33E1E8702</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <Exec>
+      <Command>%windir%\system32\spaceman.exe</Command>
+      <Arguments>/Work</Arguments>
+    </Exec>
+  </Actions>
+</Task>

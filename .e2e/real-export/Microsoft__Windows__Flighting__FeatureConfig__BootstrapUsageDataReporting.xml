@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FRFX;;;AU)</SecurityDescriptor>
+    <Source>$(@%systemroot%\system32\fcon.dll,-601)</Source>
+    <Author>$(@%systemroot%\system32\fcon.dll,-602)</Author>
+    <Description>$(@%systemroot%\system32\fcon.dll,-604)</Description>
+    <URI>\Microsoft\Windows\Flighting\FeatureConfig\BootstrapUsageDataReporting</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <ExecutionTimeLimit>PT4H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <TimeTrigger>
+      <StartBoundary>2024-04-05T01:06:51+01:00</StartBoundary>
+      <ExecutionTimeLimit>PT4H</ExecutionTimeLimit>
+      <Repetition>
+        <Interval>PT15M</Interval>
+      </Repetition>
+      <RandomDelay>PT1M</RandomDelay>
+    </TimeTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <ComHandler>
+      <ClassId>{D759C938-B375-41CB-A2A2-E6D866A767F4}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

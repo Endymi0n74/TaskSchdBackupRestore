@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:P(A;;FA;;;SY)(A;;FA;;;BA)(A;;FRFX;;;AU)</SecurityDescriptor>
+    <Source>$(@%systemroot%\system32\fcon.dll,-602)</Source>
+    <Author>$(@%systemroot%\system32\fcon.dll,-601)</Author>
+    <Description>$(@%systemroot%\system32\fcon.dll,-603)</Description>
+    <URI>\Microsoft\Windows\Flighting\FeatureConfig\GovernedFeatureUsageProcessing</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT5M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger>
+      <StateName>7548BCA32B0D890F</StateName>
+    </WnfStateChangeTrigger>
+    <WnfStateChangeTrigger>
+      <StateName>7550BCA32B0D890F</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <ComHandler>
+      <ClassId>{866F38A9-0302-4926-A36F-E4BAABAAE116}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

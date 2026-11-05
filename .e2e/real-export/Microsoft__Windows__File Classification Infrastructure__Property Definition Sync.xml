@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(D;;SD;;;AU)(A;;FRFWFX;;;AU)</SecurityDescriptor>
+    <Source>$(@%systemroot%\system32\srm.dll,-18000)</Source>
+    <Author>$(@%systemroot%\system32\srm.dll,-18001)</Author>
+    <Description>$(@%systemroot%\system32\srm.dll,-18002)</Description>
+    <URI>\Microsoft\Windows\File Classification Infrastructure\Property Definition Sync</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <ExecutionTimeLimit>PT5M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <RunOnlyIfIdle>true</RunOnlyIfIdle>
+    <IdleSettings>
+      <Duration>PT1M</Duration>
+      <WaitTimeout>PT1M</WaitTimeout>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger id="FsrmDailyTrigger">
+      <StartBoundary>2006-11-09T03:00:00</StartBoundary>
+      <RandomDelay>PT4H</RandomDelay>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Actions Context="Author">
+    <ComHandler>
+      <ClassId>{2AE64751-B728-4D6B-97A0-B2DA2E7D2A3B}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

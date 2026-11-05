@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)</SecurityDescriptor>
+    <URI>\Microsoft\Windows\WwanSvc\OobeDiscovery</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="LocalSystem">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <AllowHardTerminate>false</AllowHardTerminate>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>Queue</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger>
+      <Delay>PT5S</Delay>
+      <StateName>7528BCA33A19870F</StateName>
+    </WnfStateChangeTrigger>
+    <WnfStateChangeTrigger>
+      <StateName>7524BCA33E06830D</StateName>
+      <Data>01</Data>
+    </WnfStateChangeTrigger>
+    <WnfStateChangeTrigger>
+      <Delay>PT5S</Delay>
+      <StateName>7518BCA33A19870F</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="LocalSystem">
+    <ComHandler>
+      <ClassId>{C93CF9D5-031B-4AAA-AB0B-EF802347B381}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

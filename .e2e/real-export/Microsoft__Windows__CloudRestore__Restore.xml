@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Source>$(@%SystemRoot%\system32\CloudRestoreLauncher.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\CloudRestoreLauncher.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\CloudRestoreLauncher.dll,-602)</Description>
+    <URI>\Microsoft\Windows\CloudRestore\Restore</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-4</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <RestartOnFailure>
+      <Count>1</Count>
+      <Interval>PT15M</Interval>
+    </RestartOnFailure>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <WnfStateChangeTrigger id="WNF_SHEL_RESTORE_PAYLOAD_COMPLETE">
+      <StateName>75F0BEA33E06830D</StateName>
+    </WnfStateChangeTrigger>
+  </Triggers>
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{B4BCFA6F-948D-46B8-BF27-E8B1117E23B3}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

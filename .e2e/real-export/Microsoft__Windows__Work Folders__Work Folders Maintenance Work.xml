@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <Source>$(@%systemroot%\system32\WorkFoldersShell.dll,-18004)</Source>
+    <Author>$(@%systemroot%\system32\WorkFoldersShell.dll,-18005)</Author>
+    <Description>$(@%systemroot%\system32\WorkFoldersShell.dll,-18006)</Description>
+    <URI>\Microsoft\Windows\Work Folders\Work Folders Maintenance Work</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="InteractiveUsers">
+      <GroupId>S-1-5-4</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <Priority>5</Priority>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P1D</Period>
+      <Deadline>P2D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers>
+    <LogonTrigger>
+      <Delay>PT30M</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Actions Context="InteractiveUsers">
+    <ComHandler>
+      <ClassId>{63260BCE-A3FB-4A34-AA51-D4D8E877B62B}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

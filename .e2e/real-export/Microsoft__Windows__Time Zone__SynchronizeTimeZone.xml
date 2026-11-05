@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Date>2013-01-10T16:32:04.2837388</Date>
+    <Author>$(@%SystemRoot%\system32\tzsyncres.dll,-101)</Author>
+    <Description>$(@%SystemRoot%\system32\tzsyncres.dll,-102)</Description>
+    <URI>\Microsoft\Windows\Time Zone\SynchronizeTimeZone</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-18</UserId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P7D</Period>
+      <Deadline>P14D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="Author">
+    <Exec>
+      <Command>%windir%\system32\tzsync.exe</Command>
+    </Exec>
+  </Actions>
+</Task>

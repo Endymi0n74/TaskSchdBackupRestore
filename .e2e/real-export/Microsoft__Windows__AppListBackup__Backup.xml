@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <SecurityDescriptor>D:(A;;FA;;;BA)(A;;FA;;;SY)(A;;FRFX;;;BU)(A;;FRFX;;;AU)</SecurityDescriptor>
+    <Source>$(@%SystemRoot%\system32\AppListBackupLauncher.dll,-601)</Source>
+    <Author>$(@%SystemRoot%\system32\AppListBackupLauncher.dll,-600)</Author>
+    <Description>$(@%SystemRoot%\system32\AppListBackupLauncher.dll,-602)</Description>
+    <URI>\Microsoft\Windows\AppListBackup\Backup</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="AnyUser">
+      <GroupId>S-1-5-32-545</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>true</StopIfGoingOnBatteries>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <MaintenanceSettings>
+      <Period>P1D</Period>
+      <Deadline>P14D</Deadline>
+    </MaintenanceSettings>
+  </Settings>
+  <Triggers />
+  <Actions Context="AnyUser">
+    <ComHandler>
+      <ClassId>{E0DCC2CC-3354-45F2-8914-519E07809082}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>

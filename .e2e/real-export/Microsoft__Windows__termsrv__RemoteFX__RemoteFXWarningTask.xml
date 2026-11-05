@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Author>$(@%SystemRoot%\system32\RemoteFXvGPUDisablement.exe,-1)</Author>
+    <Description>$(@%SystemRoot%\system32\RemoteFXvGPUDisablement.exe,-2)</Description>
+    <URI>\Microsoft\Windows\termsrv\RemoteFX\RemoteFXWarningTask</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="AnyUser">
+      <GroupId>S-1-5-32-545</GroupId>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>true</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>PT5M</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <CalendarTrigger id="RemoteFX Warning Trigger">
+      <StartBoundary>2014-01-01T13:00:00</StartBoundary>
+      <ScheduleByDay>
+        <DaysInterval>30</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Actions Context="AnyUser">
+    <Exec>
+      <Command>%windir%\System32\RemoteFXvGPUDisablement.exe</Command>
+      <Arguments>Warning</Arguments>
+    </Exec>
+  </Actions>
+</Task>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <Source>$(@%systemroot%\system32\WorkFoldersShell.dll,-18000)</Source>
+    <Author>$(@%systemroot%\system32\WorkFoldersShell.dll,-18001)</Author>
+    <Description>$(@%systemroot%\system32\WorkFoldersShell.dll,-18002)</Description>
+    <URI>\Microsoft\Windows\Work Folders\Work Folders Logon Synchronization</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="InteractiveUsers">
+      <GroupId>S-1-5-4</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <LogonTrigger>
+      <Delay>PT5M</Delay>
+    </LogonTrigger>
+  </Triggers>
+  <Actions Context="InteractiveUsers">
+    <ComHandler>
+      <ClassId>{97D47D56-3777-49FB-8E8F-90D7E30E1A1E}</ClassId>
+      <Data><![CDATA[Logon]]></Data>
+    </ComHandler>
+  </Actions>
+</Task>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.6" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo>
+    <Version>1.0</Version>
+    <Source>$(@%systemroot%\system32\cscui.dll,-5000)</Source>
+    <Author>$(@%systemroot%\system32\cscui.dll,-5001)</Author>
+    <Description>$(@%systemroot%\system32\cscui.dll,-5003)</Description>
+    <URI>\Microsoft\Windows\Offline Files\Background Synchronization</URI>
+  </RegistrationInfo>
+  <Principals>
+    <Principal id="Users">
+      <GroupId>S-1-5-11</GroupId>
+    </Principal>
+  </Principals>
+  <Settings>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <Enabled>false</Enabled>
+    <ExecutionTimeLimit>P1D</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>true</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+  </Settings>
+  <Triggers>
+    <TimeTrigger>
+      <StartBoundary>2008-01-01T00:00:00</StartBoundary>
+      <Repetition>
+        <Interval>PT2H</Interval>
+      </Repetition>
+      <RandomDelay>PT20M</RandomDelay>
+    </TimeTrigger>
+  </Triggers>
+  <Actions Context="Users">
+    <ComHandler>
+      <ClassId>{FA3F3DD9-4C1A-456B-A8FA-C76EF3ED83B8}</ClassId>
+    </ComHandler>
+  </Actions>
+</Task>
