@@ -271,11 +271,9 @@ pub fn read_action(xml: &str, task: &str) -> Result<ActionInfo> {
                 }
             }
 
-            Event::CData(c) => {
-                if field.is_some() {
-                    let raw: &[u8] = &c;
-                    buf.push_str(&String::from_utf8_lossy(raw));
-                }
+            Event::CData(c) if field.is_some() => {
+                let raw: &[u8] = &c;
+                buf.push_str(&String::from_utf8_lossy(raw));
             }
 
             _ => {}
@@ -762,7 +760,6 @@ mod tests {
             command: Some("job.exe".to_string()),
             arguments: Some("-x".to_string()),
             working_directory: Some(r"D:\w".to_string()),
-            ..Default::default()
         };
         let out = apply_action(xml, TASK, &overrides).unwrap();
         let expected = r#"<Task><Actions><Exec><Command>job.exe</Command><Arguments>-x</Arguments><WorkingDirectory>D:\w</WorkingDirectory></Exec></Actions></Task>"#;

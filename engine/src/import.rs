@@ -67,7 +67,7 @@ pub struct ImportOptions<'a> {
 /// Nom de tache : dernier segment d'un chemin du planificateur.
 /// `\\A\\B\\Tache` -> `Tache`.
 fn task_name(path: &str) -> &str {
-    path.rsplit(|c| c == '\\' || c == '/')
+    path.rsplit(['\\', '/'])
         .find(|segment| !segment.is_empty())
         .unwrap_or(path)
 }
@@ -273,7 +273,7 @@ pub fn load_and_verify(dir: &Path) -> Result<(Manifest, HashMap<String, String>)
     let mut xmls = HashMap::new();
     let mut chemins: HashSet<String> = HashSet::new();
     // Chemin canonique -> tache qui le revendique la premiere.
-    let mut fichiers: HashMap<PathBuf, String> = HashMap::new();
+    let mut fichiers: HashMap<PathBuf, &str> = HashMap::new();
     for record in &manifest.tasks {
         // Un chemin de tache est unique dans le planificateur (Windows ne
         // distingue pas la casse) : le meme chemin deux fois ferait restaurer
@@ -292,7 +292,7 @@ pub fn load_and_verify(dir: &Path) -> Result<(Manifest, HashMap<String, String>)
         // qui pointent vers le meme fichier restaureraient cette definition
         // sous deux noms. Un export ecrit un XML par tache, donc refuser ne
         // rejette rien de legitime.
-        if let Some(premiere) = fichiers.insert(fichier.canonical, record.path.clone()) {
+        if let Some(premiere) = fichiers.insert(fichier.canonical, &record.path) {
             return Err(BackupError::InvalidManifest(format!(
                 "fichier XML utilise par plusieurs taches dans le manifeste : '{}' (taches '{}' et '{}')",
                 record.xml_file, premiere, record.path
@@ -345,35 +345,21 @@ pub fn build_plan(
     let empty_conflicts = HashMap::new();
     let empty_skips: Vec<String> = Vec::new();
     let empty_overrides: HashMap<String, crate::action::ActionOverride> = HashMap::new();
-    let (
-        answer_user_map,
-        answer_passwords_users,
-        answer_conflicts,
-        answer_skips,
-        answer_overrides,
-    ): (
-        HashMap<String, String>,
-        Vec<String>,
-        &HashMap<String, crate::answers::ConflictDecision>,
-        &Vec<String>,
-        &HashMap<String, crate::action::ActionOverride>,
-    ) = match options.answers {
+    let (answer_user_map, answer_conflicts, answer_skips, answer_overrides) = match options.answers
+    {
         Some(a) => (
             a.user_map.clone(),
-            a.passwords.keys().cloned().collect(),
             &a.conflict_decisions,
             &a.skip_tasks,
             &a.action_overrides,
         ),
         None => (
             HashMap::new(),
-            Vec::new(),
             &empty_conflicts,
             &empty_skips,
             &empty_overrides,
         ),
     };
-    let _ = answer_passwords_users; // le contenu des mots de passe est deja fusionne dans `resolver`
 
     let mut plan = Vec::new();
     // Chemin cible (minuscule, Windows ignorant la casse) -> tache source qui
@@ -463,19 +449,21 @@ pub fn build_plan(
         // 4. Resolution de l'utilisateur cible, uniquement pour les logon
         // types qui n'ont aucune autre occasion de detecter un compte absent.
         let mut target_user = record.user_id.clone();
-        if let Some(source_user) = record.user_id.clone() {
-            if needs_mapping_check(record.logon_type) && !is_well_known_account(&source_user) {
+        if let Some(source_user) = &record.user_id {
+            if needs_mapping_check(record.logon_type) && !is_well_known_account(source_user) {
                 if let Some(mapped) = options
                     .user_map
-                    .get(&source_user)
-                    .or_else(|| answer_user_map.get(&source_user))
+                    .get(source_user)
+                    .or_else(|| answer_user_map.get(source_user))
                 {
                     target_user = Some(mapped.clone());
-                } else if let Some(mapped) = interactor.ask_user_mapping(&source_user, &target_path)
+                } else if let Some(mapped) = interactor.ask_user_mapping(source_user, &target_path)
                 {
                     target_user = Some(mapped);
                 } else {
-                    push_and_continue!(ImportAction::UserUnmapped { source_user });
+                    push_and_continue!(ImportAction::UserUnmapped {
+                        source_user: source_user.clone()
+                    });
                 }
             }
         }
