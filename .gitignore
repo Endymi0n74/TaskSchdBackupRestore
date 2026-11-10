@@ -29,6 +29,9 @@ release/
 # --- Icône générée ---
 app-icon.png
 
+# --- Instructions locales pour les agents (jamais publiees) ---
+AGENTS.md
+
 # --- Divers ---
 .DS_Store
 Thumbs.db
