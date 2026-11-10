@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.1 — 2026-11-10
+
+### Corrections
+
+- **Fermeture propre de l'interface** : `TaskSchdBackupRestoreGui.exe` ne
+  reste plus en tâche après la fermeture de la fenêtre. L'application quitte
+  désormais explicitement sur `CloseRequested` et `Destroyed`, en fermant
+  d'abord la fenêtre pour relâcher les ressources WebView2 (notamment sous
+  Windows Server 2016/2019).
+
+### Ménage / optimisation
+
+- Moteur d'import : suppression d'une allocation `Vec<String>` inutile
+  (`answer_passwords_users`), moins de clones de `String` dans
+  `load_and_verify` et `build_plan`.
+
 ## 1.3.0 — 2026-11-05
 
 ### Dossier cible de restauration
