@@ -25,7 +25,16 @@ use crate::AppState;
 /// Appelé depuis `on_window_event` sur `CloseRequested`, c'est-à-dire
 /// **avant** toute déconnexion de la fenêtre ou du WebView2 : quoi que le
 /// runtime ait prévu de faire ensuite, le processus est déjà sorti.
-pub fn exit_on_window_close(app: &tauri::AppHandle) {
+/// Purge les fichiers de travail temporaires, journalise la fermeture puis
+/// **quitte le processus**. Ne retourne jamais.
+///
+/// Appelé depuis `on_window_event` sur `CloseRequested` ou `Destroyed`,
+/// c'est-à-dire **avant** toute déconnexion de la fenêtre ou du WebView2 :
+/// quoi que le runtime ait prévu de faire ensuite, le processus est déjà
+/// sorti.
+pub fn exit_on_window_close(window: &tauri::Window) {
+    let app = window.app_handle();
+
     // 1. Aucun fichier de réponses/résultat ne doit rester sur disque.
     //    Un helper élevé qui aurait déjà chargé ses réponses n'est pas
     //    concerné (il les a supprimées en les lisant) ; une élévation encore
@@ -39,7 +48,12 @@ pub fn exit_on_window_close(app: &tauri::AppHandle) {
         state.log.info("Fenêtre fermée — arrêt de l'application");
     }
 
-    // 3. Sortie déterministe : aucune déconnexion WebView2/COM/runtime ne
+    // 3. Fermer explicitement la fenêtre pour relâcher les ressources
+    //    WebView2 avant de tuer le processus. Cela ne génère pas de
+    //    récursion : `std::process::exit(0)` suit immédiatement.
+    let _ = window.close();
+
+    // 4. Sortie déterministe : aucune déconnexion WebView2/COM/runtime ne
     //    doit pouvoir maintenir le processus en vie. Les processus enfants
     //    WebView2 détectent la fin de l'hôte et s'arrêtent d'eux-mêmes.
     std::process::exit(0);

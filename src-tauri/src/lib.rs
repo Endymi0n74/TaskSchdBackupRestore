@@ -55,8 +55,18 @@ pub fn run() {
             // déconnexion WebView2 — sous Windows Server 2016/2019, cette
             // déconnexion pouvait laisser `TaskSchdBackupRestoreGui.exe` vivant
             // (cf. `shutdown.rs`).
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                shutdown::exit_on_window_close(window.app_handle());
+            //
+            // `CloseRequested` est émis quand l'utilisateur clique sur la
+            // croix ; `Destroyed` l'est quand la fenêtre est réellement
+            // détruite. Sur certains Windows Server 2016/2019, l'un des deux
+            // peut ne pas arriver selon la manière dont WebView2 traite le
+            // message WM_CLOSE : on couvre les deux pour être sûr que le
+            // processus quitte toujours.
+            match event {
+                tauri::WindowEvent::CloseRequested { .. } | tauri::WindowEvent::Destroyed => {
+                    shutdown::exit_on_window_close(window);
+                }
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![
