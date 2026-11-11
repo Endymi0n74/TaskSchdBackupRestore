@@ -22,12 +22,6 @@ use crate::AppState;
 /// Purge les fichiers de travail temporaires, journalise la fermeture puis
 /// **quitte le processus**. Ne retourne jamais.
 ///
-/// Appelé depuis `on_window_event` sur `CloseRequested`, c'est-à-dire
-/// **avant** toute déconnexion de la fenêtre ou du WebView2 : quoi que le
-/// runtime ait prévu de faire ensuite, le processus est déjà sorti.
-/// Purge les fichiers de travail temporaires, journalise la fermeture puis
-/// **quitte le processus**. Ne retourne jamais.
-///
 /// Appelé depuis `on_window_event` sur `CloseRequested` ou `Destroyed`,
 /// c'est-à-dire **avant** toute déconnexion de la fenêtre ou du WebView2 :
 /// quoi que le runtime ait prévu de faire ensuite, le processus est déjà

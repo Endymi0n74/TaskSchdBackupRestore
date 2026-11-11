@@ -192,16 +192,13 @@ pub fn unzip_verified(
         let _ = fs::remove_dir_all(&staging);
     }
 
-    let count = fs::read_dir(dest_dir)
-        .map(|d| d.flatten().count())
-        .unwrap_or(0);
     log.info(&format!(
         "Archive ZIP extraite et vérifiée vers {} ({} fichier(s) XML/manifeste extraits, {} entrée(s) ignorée(s))",
         dest_dir.display(),
         extracted,
         ignored
     ));
-    Ok(count)
+    Ok(extracted)
 }
 
 /// Extrait toutes les entrées de `zip_path` vers `dest_dir`, avec protection

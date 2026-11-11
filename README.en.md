@@ -61,7 +61,7 @@ experience on older servers.
 
 ## 📖 User guide (PDF)
 
-The complete illustrated guide — 10 sections, 11 annotated screenshots, written for **v1.3.0** —
+The complete illustrated guide — 10 sections, 11 annotated screenshots, written for **v1.4.0** —
 is included: **[`dist/Guide-TaskSchdBackupRestore.pdf`](dist/Guide-TaskSchdBackupRestore.pdf)**
 
 - overview: interface and command line, one engine (section 1) ;

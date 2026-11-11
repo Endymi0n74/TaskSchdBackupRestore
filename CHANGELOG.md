@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.4.0 — 2026-11-11
+
+### Corrections
+
+- **Rapport d'import en simulation** : les créations et les mises à jour sont
+  annoncées au conditionnel (« Seraient créées », « Seraient mises à jour »).
+  Les mises à jour n'étaient jamais signalées comme simulées et la ligne des
+  créations mélangeait libellé et verbe.
+- **Compte des entrées extraites** : `unzip_verified` renvoie le nombre de
+  fichiers réellement extraits (XML + manifeste) et non le nombre d'entrées à
+  la racine du dossier de destination. Une archive dont les XML vivent dans un
+  sous-dossier affichait donc un compte faux dans l'interface et les journaux.
+
+### Ménage
+
+- `export --hide-microsoft` réutilise le filtre du moteur
+  (`PatternFilter::exclude_microsoft`) : le motif `\Microsoft\*` n'est plus
+  reconstruit dans le CLI.
+- Suppression de `PasswordResolver::is_tty` (jamais appelé) et d'un
+  `#[allow(clippy::too_many_arguments)]` devenu inutile sur `build_plan`.
+- `shutdown.rs` : commentaire de documentation dupliqué retiré ;
+  `purge_old_logs` prend un `&Path` et non un `&PathBuf`.
+- Test de l'anneau de journaux rendu exact (assertion tautologique remplacée
+  par la vérification de la dernière ligne).
+- Dossier : restes locaux supprimés (`.tmp_attempt_inventory.env.tmp`,
+  journaux de `dist/logs/`, export réel et sorties du banc `.e2e/`, anciens
+  artefacts de `release/`). `.e2e/real-export/` et les sorties du banc ne sont
+  plus suivis par Git.
+
 ## 1.3.1 — 2026-11-10
 
 ### Corrections

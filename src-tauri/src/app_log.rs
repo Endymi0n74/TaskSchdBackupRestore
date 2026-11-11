@@ -10,7 +10,7 @@
 
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde::Serialize;
@@ -55,7 +55,7 @@ pub fn default_log_dir() -> PathBuf {
 }
 
 /// Supprime les fichiers `TaskSchdBackupRestore-*.log` plus vieux que `days` jours.
-fn purge_old_logs(dir: &PathBuf, days: u64) {
+fn purge_old_logs(dir: &Path, days: u64) {
     let cutoff = chrono::Local::now() - chrono::Duration::days(days as i64);
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
@@ -229,13 +229,10 @@ mod tests {
         }
         let (lines, _) = log.lines_after(0);
         assert!(lines.len() <= RING_CAPACITY, "l'anneau doit être borné");
-        // Les lignes les plus récentes sont conservées.
-        assert!(
-            lines.last().unwrap().message.contains("ligne 5000") || {
-                let n = RING_CAPACITY + 49;
-                lines.last().unwrap().message == format!("ligne {n}")
-            }
-        );
+        // Les lignes les plus récentes sont conservées : la dernière est la
+        // dernière écrite (ouverture incluse dans le décompte).
+        let derniere = RING_CAPACITY + 49;
+        assert_eq!(lines.last().unwrap().message, format!("ligne {derniere}"));
     }
 
     #[test]
@@ -257,7 +254,7 @@ mod tests {
         let fresh = dir.path().join("TaskSchdBackupRestore-2099-01-01.log");
         fs::write(&old, "ancien").unwrap();
         fs::write(&fresh, "récent").unwrap();
-        purge_old_logs(&dir.path().to_path_buf(), RETENTION_DAYS);
+        purge_old_logs(dir.path(), RETENTION_DAYS);
         assert!(!old.exists(), "le fichier trop ancien doit être supprimé");
         assert!(fresh.exists(), "le fichier récent doit être conservé");
     }

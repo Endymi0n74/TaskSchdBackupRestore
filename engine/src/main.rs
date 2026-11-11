@@ -32,7 +32,13 @@ fn make_scheduler() -> Result<Box<dyn TaskSchedulerApi>> {
 }
 
 fn print_report(report: &ExecutionReport, dry_run: bool) {
-    let verb = if dry_run { "seraient" } else { "ont ete" };
+    // Une simulation ne doit jamais se lire comme un import reel : les deux
+    // listes qui resultent d'une ecriture sont annoncees au conditionnel.
+    let (crees, maj) = if dry_run {
+        ("Seraient creees", "Seraient mises a jour")
+    } else {
+        ("Creees", "Mises a jour")
+    };
     println!();
     println!(
         "=== Rapport d'import{} ===",
@@ -40,15 +46,14 @@ fn print_report(report: &ExecutionReport, dry_run: bool) {
     );
     if !report.created.is_empty() {
         println!(
-            "Crees ({}) : {} {}",
+            "{crees} ({}) : {}",
             report.created.len(),
-            report.created.join(", "),
-            verb
+            report.created.join(", ")
         );
     }
     if !report.updated.is_empty() {
         println!(
-            "Mis a jour ({}) : {}",
+            "{maj} ({}) : {}",
             report.updated.len(),
             report.updated.join(", ")
         );
@@ -145,11 +150,10 @@ fn run() -> Result<i32> {
             let scheduler = make_scheduler()?;
             // Les taches systeme sont exclues de la meme facon que dans
             // l'interface (dossier \Microsoft\ entierement ignore).
-            let mut exclude = exclude;
+            let mut filter = PatternFilter::new(include, exclude);
             if hide_microsoft {
-                exclude.push("\\Microsoft\\*".to_string());
+                filter = filter.exclude_microsoft();
             }
-            let filter = PatternFilter::new(include, exclude);
             taskschdbackuprestore::log::info(format!("Export vers {}", dir.display()));
             let summary = export(
                 scheduler.as_ref(),

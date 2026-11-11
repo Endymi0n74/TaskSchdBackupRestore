@@ -43,7 +43,7 @@ pub struct PlanItem {
 impl PlanItem {
     /// Acces au mot de passe resolu pour cette tache, si applicable. Ne
     /// jamais journaliser cette valeur.
-    pub fn take_password(&self) -> Option<&str> {
+    pub fn password(&self) -> Option<&str> {
         self.password.as_deref()
     }
 }
@@ -333,7 +333,6 @@ fn needs_mapping_check(logon_type: LogonType) -> bool {
 /// Construit le plan d'import complet. C'est la meme fonction qui est
 /// utilisee en dry-run et en execution reelle : seule l'etape d'ecriture
 /// (`execute_plan`) differe.
-#[allow(clippy::too_many_arguments)]
 pub fn build_plan(
     scheduler: &dyn TaskSchedulerApi,
     manifest: &Manifest,
@@ -580,7 +579,7 @@ pub fn execute_plan_with_undo(
                     &item.target_path,
                     &item.xml,
                     item.target_user.as_deref(),
-                    item.take_password(),
+                    item.password(),
                     item.record.logon_type,
                 );
                 match result {

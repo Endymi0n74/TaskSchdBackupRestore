@@ -23,6 +23,12 @@ dist/guide/shots/viewer.html
 dist/guide/tmp-*
 dist/guide/_inspect.html
 
+# --- Banc e2e : sorties de run et export réel de la machine (à recréer) ---
+.e2e/run/
+.e2e/real-export/
+.e2e/e2e-out.txt
+.e2e/*.log
+
 # --- Artefacts de release (à joindre aux releases GitHub, jamais commités) ---
 release/
 

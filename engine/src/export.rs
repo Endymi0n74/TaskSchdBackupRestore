@@ -12,6 +12,9 @@ use crate::hash::sha256_hex;
 use crate::model::{Manifest, TaskRecord};
 use crate::scheduler::TaskSchedulerApi;
 
+/// Motif excluant le dossier systeme `\Microsoft\` et ses sous-dossiers.
+const MICROSOFT_PATTERN: &str = "\\Microsoft\\*";
+
 /// Filtre par motif simple (glob "*" uniquement, insensible a la casse) sur
 /// le chemin complet de la tache.
 pub struct PatternFilter {
@@ -25,13 +28,12 @@ impl PatternFilter {
         PatternFilter { include, exclude }
     }
 
-    /// Filtre "masquer les taches systeme" : exclut tout ce qui vit sous
-    /// `\Microsoft\` (dossier systeme), comme le fait l'interface graphique.
-    pub fn hide_microsoft() -> Self {
-        PatternFilter {
-            include: Vec::new(),
-            exclude: vec!["\\Microsoft\\*".to_string()],
-        }
+    /// Ajoute l'exclusion des taches systeme `\Microsoft\` (dossier systeme),
+    /// comme le fait l'interface graphique : une seule definition du motif
+    /// pour `list --hide-microsoft` et `export --hide-microsoft`.
+    pub fn exclude_microsoft(mut self) -> Self {
+        self.exclude.push(MICROSOFT_PATTERN.to_string());
+        self
     }
 
     fn matches_one(pattern: &str, text: &str) -> bool {
@@ -312,7 +314,7 @@ mod tests {
 
     #[test]
     fn hide_microsoft_filter_excludes_system_tasks() {
-        let filter = PatternFilter::hide_microsoft();
+        let filter = PatternFilter::new(vec![], vec![]).exclude_microsoft();
         assert!(!filter.allows("\\Microsoft\\Windows\\Defrag\\ScheduledDefrag"));
         assert!(!filter.allows("\\Microsoft\\Office\\Feature Updates"));
         assert!(filter.allows("\\MSIAfterburner"));

@@ -67,7 +67,7 @@ guidée sur les anciens serveurs.
 
 ## 📖 Guide d'utilisation (PDF)
 
-Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.3.0** — est
+Le guide illustré complet — 10 sections, 11 captures annotées, établi pour la **v1.4.0** — est
 inclus : **[`dist/Guide-TaskSchdBackupRestore.pdf`](dist/Guide-TaskSchdBackupRestore.pdf)**
 
 - vue d'ensemble : interface et ligne de commande, un même moteur (section 1) ;

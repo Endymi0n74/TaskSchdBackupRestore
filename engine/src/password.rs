@@ -5,7 +5,6 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::io::IsTerminal;
 
 use crate::error::{BackupError, Result};
 
@@ -64,11 +63,6 @@ impl PasswordResolver {
             allow_interactive,
             cache: RefCell::new(HashMap::new()),
         }
-    }
-
-    /// Indique si l'entree standard est un terminal interactif.
-    pub fn is_tty() -> bool {
-        std::io::stdin().is_terminal()
     }
 
     /// Cherche un mot de passe deja connu (statique ou deja saisi pour cet
