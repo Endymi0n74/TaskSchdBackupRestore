@@ -35,6 +35,14 @@
   journaux de `dist/logs/`, export réel et sorties du banc `.e2e/`, anciens
   artefacts de `release/`). `.e2e/real-export/` et les sorties du banc ne sont
   plus suivis par Git.
+- `tools/make-release.ps1` : la boucle d'archive écrasait `$input`, variable
+  automatique de PowerShell, ce qui bloquait le script lancé en `-File` sans
+  aucune sortie ni code de retour ; flux renommés et préférences de
+  confirmation et de progression fixées pour tourner sans interaction.
+- `dist/guide/scripts` : 17 scripts de capture inutilisés supprimés ; restent
+  les 6 réellement utilisés (`capture`, `take-console-shots`, `take-gui-shots`,
+  `make-pdf`, `ocr`, `figcheck`). `make-pdf.ps1` n'écrase plus `$args`.
+- Binaires de `dist/` et PDF régénérés depuis les sources 1.4.0.
 
 ## 1.3.1 — 2026-11-10
 
