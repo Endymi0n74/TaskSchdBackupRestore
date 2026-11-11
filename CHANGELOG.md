@@ -13,6 +13,13 @@
   la racine du dossier de destination. Une archive dont les XML vivent dans un
   sous-dossier affichait donc un compte faux dans l'interface et les journaux.
 
+### Interface
+
+- **Boîtes de dialogue** : `window.confirm` et `window.prompt` sont remplacés
+  par une modale de la page (`<dialog>`). Sous WebView2, `window.prompt` est
+  désactivé : la confirmation d'export sans sélection et la saisie du nom du
+  dossier d'extraction restaient sans effet.
+
 ### Ménage
 
 - `export --hide-microsoft` réutilise le filtre du moteur

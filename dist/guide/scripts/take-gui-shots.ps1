@@ -2,7 +2,7 @@
 # WebView2 via le port de debug Chrome DevTools (CDP).
 #
 # Pourquoi : les anciennes captures passaient par des clics simules
-# (click.ps1) puis une capture d'ecran — coordonnees, DPI et focus pouvaient
+# puis une capture d'ecran — coordonnees, DPI et focus pouvaient
 # deriver. Ici l'etat de l'interface est pose en JS (clics/fill reels sur le
 # DOM), la capture est le rendu exact du WebView2, et la sequence est
 # entierement rejouable.

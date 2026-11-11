@@ -20,6 +20,10 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Mode non interactif : aucun applet ne doit attendre une confirmation ni
+# dessiner de barre de progression (execution CI, sortie redirigee, stdin ferme).
+$ConfirmPreference = 'None'
+$ProgressPreference = 'SilentlyContinue'
 
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (-not $Dist)   { $Dist   = Join-Path $root 'dist' }
@@ -107,9 +111,12 @@ try {
         $rel = $file.FullName.Substring($prefixLen).Replace('\', '/')
         $entry = $archive.CreateEntry($rel, [System.IO.Compression.CompressionLevel]::Optimal)
         $entry.LastWriteTime = $file.LastWriteTime
-        $input = [System.IO.File]::OpenRead($file.FullName)
-        $output = $entry.Open()
-        try { $input.CopyTo($output) } finally { $output.Dispose(); $input.Dispose() }
+        # Ne jamais nommer ces flux $input : c'est une variable automatique
+        # de PowerShell, l'ecraser bloque le processus a la fin du script
+        # lorsqu'il est lance avec -File (aucune sortie, code jamais rendu).
+        $fileStream = [System.IO.File]::OpenRead($file.FullName)
+        $entryStream = $entry.Open()
+        try { $fileStream.CopyTo($entryStream) } finally { $entryStream.Dispose(); $fileStream.Dispose() }
     }
 } finally {
     $archive.Dispose()

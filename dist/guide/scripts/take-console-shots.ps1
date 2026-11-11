@@ -2,7 +2,7 @@
 #
 # Repose sur capture.ps1 (console conhost + saisie par WM_CHAR) : aucune
 # dependance au focus clavier ni a SendKeys, contrairement a l'ancien
-# take-shots.ps1 supprime. Chaque appel lance une console, envoie les
+# script de capture supprime. Chaque appel lance une console, envoie les
 # reponses, attend la fin de la commande, capture puis tue la console.
 #
 # Usage :

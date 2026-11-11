@@ -37,6 +37,75 @@ function showError(err) {
 const $ = (id) => document.getElementById(id);
 
 // ---------------------------------------------------------------------------
+// Boîtes de dialogue
+// ---------------------------------------------------------------------------
+// window.confirm et window.prompt ne sont pas fiables dans WebView2 (prompt
+// désactivé, dialogues natifs bloquants) : on utilise le <dialog> de la page.
+
+function askModal({ title, message, fieldLabel, value, okLabel }) {
+  return new Promise((resolve) => {
+    const dialog = $("modal");
+    const input = $("modal-input");
+    const withField = Boolean(fieldLabel);
+
+    $("modal-title").textContent = title;
+    $("modal-message").textContent = message || "";
+    $("modal-message").classList.toggle("hidden", !message);
+    $("modal-field").classList.toggle("hidden", !withField);
+    $("modal-label").textContent = fieldLabel || "";
+    input.value = withField ? value || "" : "";
+    $("modal-ok").textContent = okLabel || "Continuer";
+
+    // Résultat de la fermeture : true (confirmation), texte saisi, ou null.
+    let result = null;
+    const close = (closing) => {
+      if (!dialog.open) return;
+      result = closing;
+      dialog.close();
+    };
+
+    dialog.oncancel = (ev) => {
+      ev.preventDefault();
+      close(null);
+    };
+    $("modal-cancel").onclick = () => close(null);
+    $("modal-ok").onclick = () => close(withField ? input.value.trim() || null : true);
+    input.onkeydown = (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        $("modal-ok").click();
+      }
+    };
+    dialog.onclose = () => resolve(withField ? result : result === true);
+
+    dialog.showModal();
+    if (withField) {
+      input.focus();
+      input.select();
+    } else {
+      $("modal-ok").focus();
+    }
+  });
+}
+
+function askConfirm(message, options = {}) {
+  return askModal({
+    title: options.title || "Confirmation",
+    message,
+    okLabel: options.okLabel,
+  });
+}
+
+function askText(fieldLabel, value, options = {}) {
+  return askModal({
+    title: options.title || "Saisie",
+    fieldLabel,
+    value,
+    okLabel: options.okLabel,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Onglets
 // ---------------------------------------------------------------------------
 
@@ -164,8 +233,9 @@ $("btn-export").addEventListener("click", async () => {
     const excludePatterns = parse("exclude");
 
     if (selected.length === 0 && includePatterns.length === 0) {
-      const ok = window.confirm(
-        "Aucune tâche sélectionnée : toutes les tâches seront exportées. Continuer ?"
+      const ok = await askConfirm(
+        "Aucune tâche sélectionnée : toutes les tâches seront exportées. Continuer ?",
+        { title: "Export de toutes les tâches", okLabel: "Exporter" }
       );
       if (!ok) return;
     }
@@ -263,7 +333,10 @@ $("btn-extract-zip").addEventListener("click", async () => {
     const suggested = zip.replace(/\\/g, "/").split("/").pop().replace(/\.zip$/i, "");
     const dest = await invoke("pick_folder", { title: "Dossier où extraire l'archive" });
     if (!dest) return;
-    const target = await window.prompt("Nom du dossier d'extraction", suggested);
+    const target = await askText("Nom du dossier d'extraction", suggested, {
+      title: "Extraire l'archive",
+      okLabel: "Extraire",
+    });
     if (!target) return;
 
     setStatus("Extraction et vérification de l'archive…");

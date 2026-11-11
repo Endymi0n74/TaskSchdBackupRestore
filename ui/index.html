@@ -154,6 +154,23 @@
 
   <footer id="statusbar" class="statusbar">Prêt.</footer>
 
+  <!-- Boîtes de dialogue de l'application : window.confirm et window.prompt ne
+       sont pas fiables sous WebView2 (prompt désactivé, dialogues bloquants). -->
+  <dialog id="modal" class="modal" aria-labelledby="modal-title">
+    <div class="modal-body">
+      <h2 id="modal-title"></h2>
+      <p id="modal-message"></p>
+      <label id="modal-field" class="modal-field hidden">
+        <span id="modal-label"></span>
+        <input id="modal-input" type="text" />
+      </label>
+      <div class="modal-actions">
+        <button id="modal-cancel" type="button" class="btn">Annuler</button>
+        <button id="modal-ok" type="button" class="btn btn-primary">Continuer</button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="app.js"></script>
 </body>
 </html>
