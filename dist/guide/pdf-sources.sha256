@@ -2,5 +2,5 @@
 # Ne pas editer a la main : modifier les sources, puis
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\guide-pdf.ps1 -Action Build
 # <sha256 des sources>  <PDF livre>
-c65254f0be0c383f9965bddaead2c35272043d4546207daec669445e5d4a923c  dist/Guide-TaskSchdBackupRestore.pdf
-51015be9dbcf46275fad3d1574810eb2f45c7bde03f16b376e0999b33d6b5555  dist/Memo-motifs.pdf
+dde61aba07fea9c2b29d73eb47bc65f0c0a02a28b64f4f26a460261691ecfb8f  dist/Guide-TaskSchdBackupRestore.pdf
+b4ec7323395169bf00f4719bd58ed320a02c00ef4e0d48ee8e5f433e6892b444  dist/Memo-motifs.pdf

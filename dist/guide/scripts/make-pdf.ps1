@@ -29,7 +29,9 @@ if (-not (Test-Path $pdfDir)) { $null = New-Item -ItemType Directory -Path $pdfD
 # Profil temporaire jetable : n'accede jamais au profil Edge de l'utilisateur.
 $userData = Join-Path $env:TEMP ("edge-pdf-{0}-{1}" -f $PID, [DateTime]::Now.Ticks)
 
-$args = @(
+# Ne pas nommer cette liste $args : c'est une variable automatique de
+# PowerShell (arguments non lies).
+$edgeArgs = @(
   "--headless",
   "--disable-gpu",
   "--no-first-run",
@@ -40,7 +42,7 @@ $args = @(
   ("`"{0}`"" -f $htmlPath)
 )
 
-& $edge @args | Out-Null
+& $edge @edgeArgs | Out-Null
 $exit = $LASTEXITCODE
 
 # Nettoyage du profil temporaire (best effort).
